@@ -1,4 +1,4 @@
-This is the Perl interface to Yahoo! Search's web services.
+This is the Perl interface to Yahoo! Search web services.
 
 This package provides a simple but complete programmatic interface to
 Yahoo's document search, image search, video search, news search, and

@@ -960,7 +960,7 @@ sub HostUrl
 (<Appropriate for B<Doc>, B<Image>, and B<Video> search results>)
 
 Returns a string representing the file type of the item to which
-C<$Result-E<gt>Url> points. For C<Doc> searches, the MIME type (e.g.
+C<$Result-E<gt>Url> points. For I<Doc> searches, the MIME type (e.g.
 "text/html") is returned.
 
 For other search spaces, here are the possible return values:
@@ -1413,7 +1413,8 @@ sub Miles
 (I<Appropriate for B<Local> search results>)
 
 Returns the rating associated with the result, if there is one. If there is
-a rating, it is from 1 (lowest) to 5 (highest) in 0.5-sized steps.
+a rating, it is from 1 (lowest) to 5 (highest) in 0.5-sized steps. If not,
+nothing is returned.
 
 =cut
 

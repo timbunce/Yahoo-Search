@@ -1,21 +1,54 @@
+1.1.4   March 10, 2005
+----------------------
+
+  Added support for 'Lat' and 'Long' args to a 'Local' query.
+  See: http://developer.yahoo.net/blog/archives/2005/03/enhancements_to_1.html
+
+  No longer restrict a Language arg to a specific set of values -- let the
+  web services return an error if the language is not known. I made this
+  change because I suspect that the list of languages will be somewhat
+  dynamic, and I don't want people to have to install a new version of this
+  package just because Yahoo! added, say, Serbian to the list of languages.
+
+  Removed the prepended "ERROR " from all $@ values -- dunno why I had it
+  there in the first place.
+
+  Documented %Yahoo::Search::KnownLanguage (and added
+  %Yahoo::Search::KnownCountry).
+
+  Documented $Yahoo::Search::UseXmlSimple
+
+  Documented the PreRequestCallback argument
+
+  Added support for a 'Country' arg to a 'Doc' query.
+
+
+
 1.0.3   March 6, 2005
 ---------------------
-A few doc typo corrections -- thanks John Gruber
+
+  A few doc typo corrections -- thanks John Gruber
+
 
 1.0.2   March 1, 2005
 ---------------------
-Added env_proxy to LWP::UserAgent request -- thanks SIMONFLK
+
+  Added env_proxy to LWP::UserAgent request -- thanks SIMONFLK
+
 
 1.0.1   March 1, 2005
 ---------------------
-Fixed bonehead CPAN install error -- thanks Tatsuhiko Miyagawa.
+
+  Fixed bonehead CPAN install error -- thanks Tatsuhiko Miyagawa.
 
 
 1.0.0   Feb 28, 2005
 --------------------
-Public release
+
+  Public release
 
 
 0.9     Feb 18, 2005
 ----------------------
-Yahoo!-Internal release
+
+  Yahoo!-Internal release

@@ -9,7 +9,7 @@ use Yahoo::Search::Request;
 ## Copyright (C) 2005 Yahoo! Inc.
 ##
 
-our $VERSION = '1.0.3'; # last num increases monotonically across all versions
+our $VERSION = '1.1.4'; # last num increases monotonically across all versions
 
 ##
 ## CLASS OVERVIEW
@@ -52,6 +52,7 @@ my %Config =
                 AllowAdult   => 0,
                 AllowSimilar => 0,
                 Language     => undef,
+                Country      => undef,
                },
 
    AllowedMode => {
@@ -160,7 +161,17 @@ my %Config =
                 State      => undef,
                 PostalCode => undef,
                 Location   => undef,
+                Lat        => undef,
+                Long       => undef,
+                Sort       => undef,
                },
+
+   AllowedSort => {
+                   relevance => 1,
+                   distance  => 1,
+                   rating    => 1,
+                   title     => 1
+                  }
   },
 
 
@@ -203,6 +214,10 @@ my %Config =
    Url => 'http://api.search.yahoo.com/WebSearchService/V1/relatedSuggestion',
   },
 );
+
+our $UseXmlSimple = $ENV{YAHOO_SEARCH_XMLSIMPLE}; ## used in Search/Request.pm
+our $RecentRequestUrl; ## filled in Search/Request.pm
+
 
 ##
 ## These args are allowed for any Query()
@@ -307,6 +322,52 @@ my $allow_positive_float = sub
     }
 };
 
+my $allow_float = sub
+{
+    my $space = shift; # unused
+    if (not @_) {
+        return "number";
+    }
+    my $val = shift;
+
+    if (not $val =~ m/^-? (?:  \d+(?: \.\d* )?$ | \.\d+$ )/x) {
+        return (0); # invalid: not a number
+    } else {
+        return (1, $val);
+    }
+};
+
+my $allow_country_code = sub
+{
+    my $space = shift; # unused
+    if (not @_) {
+        return "country code";
+    }
+    my $val = shift;
+
+    if (not $val =~ m/^(?: [a-z][a-z]$ | default$ )/x) {
+        return (0); # not a country code and not "default"
+    } else {
+        return (1, $val);
+    }
+};
+
+my $allow_language_code = sub
+{
+    my $space = shift; # unused
+    if (not @_) {
+        return "language code";
+    }
+    my $val = shift;
+
+    if (not $val =~ m/^(?: [a-z][a-z][a-z]?$ | default$ )/x) {
+        return (0); # not a language code and not "default"
+    } else {
+        return (1, $val);
+    }
+};
+
+
 ## This has different args than the others -- has $hashref prepended
 my $allow_from_hash = sub
 {
@@ -392,46 +453,76 @@ my $allow_appid = sub
 
 our %KnownLanguage =
 (
-  default => 'any/all languages',
+ default => 'any/all languages',
 
-  ar  =>  'Arabic',
-  bg  =>  'Bulgarian',
-  ca  =>  'Catalan',
-  szh =>  'Chinese (simplified)',
-  tzh =>  'Chinese (traditional)',
-  hr  =>  'Croatian',
-  cs  =>  'Czech',
-  da  =>  'Danish',
-  nl  =>  'Dutch',
-  en  =>  'English',
-  et  =>  'Estonian',
-  fi  =>  'Finnish',
-  fr  =>  'French',
-  de  =>  'German',
-  el  =>  'Greek',
-  he  =>  'Hebrew',
-  hu  =>  'Hungarian',
-  is  =>  'Icelandic',
-# id  =>  'Indonesian',
-  it  =>  'Italian',
-  ja  =>  'Japanese',
-  ko  =>  'Korean',
-  lv  =>  'Latvian',
-  lt  =>  'Lithuanian',
-  no  =>  'Norwegian',
-  fa  =>  'Persian',
-  pl  =>  'Polish',
-  pt  =>  'Portuguese',
-  ro  =>  'Romanian',
-  ru  =>  'Russian',
-# sr  =>  'Serbian',
-  sk  =>  'Slovak',
-  sl  =>  'Slovenian',
-  es  =>  'Spanish',
-  sv  =>  'Swedish',
-  th  =>  'Thai',
-  tr  =>  'Turkish',
+ ar  =>  'Arabic',
+ bg  =>  'Bulgarian',
+ ca  =>  'Catalan',
+ szh =>  'Chinese (simplified)',
+ tzh =>  'Chinese (traditional)',
+ hr  =>  'Croatian',
+ cs  =>  'Czech',
+ da  =>  'Danish',
+ nl  =>  'Dutch',
+ en  =>  'English',
+ et  =>  'Estonian',
+ fi  =>  'Finnish',
+ fr  =>  'French',
+ de  =>  'German',
+ el  =>  'Greek',
+ he  =>  'Hebrew',
+ hu  =>  'Hungarian',
+ is  =>  'Icelandic',
+ it  =>  'Italian',
+ ja  =>  'Japanese',
+ ko  =>  'Korean',
+ lv  =>  'Latvian',
+ lt  =>  'Lithuanian',
+ no  =>  'Norwegian',
+ fa  =>  'Persian',
+ pl  =>  'Polish',
+ pt  =>  'Portuguese',
+ ro  =>  'Romanian',
+ ru  =>  'Russian',
+ sk  =>  'Slovak',
+ sl  =>  'Slovenian',
+ es  =>  'Spanish',
+ sv  =>  'Swedish',
+ th  =>  'Thai',
+ tr  =>  'Turkish',
 );
+
+our %KnownCountry =
+(
+ default => "any/all countries",
+
+ ar => 'Argentina',
+ au => 'Australia',
+ at => 'Austria',
+ be => 'Belgium',
+ br => 'Brazil',
+ ca => 'Canada',
+ cn => 'China',
+ cz => 'Czech Republic',
+ dk => 'Denmark',
+ fi => 'Finland',
+ fr => 'France',
+ de => 'Germany',
+ it => 'Italy',
+ jp => 'Japan',
+ kr => 'Korea',
+ nl => 'Netherlands',
+ no => 'Norway',
+ pl => 'Poland',
+ rf => 'Russian Federation',
+ es => 'Spain',
+ se => 'Sweden',
+ ch => 'Switzerland',
+ tw => 'Taiwan',
+ uk => 'United Kingdom',
+ us => 'United States',
+);
+
 
 ##
 ## Mapping from arg name to value validation routine.
@@ -450,13 +541,16 @@ my %ValidateRoutine =
  City         => $allow_any,
  State        => $allow_any,
  Location     => $allow_any,
+ Lat          => $allow_float,
+ Long         => $allow_float,
 
  PostalCode   => $allow_postal_code,
+ Language     => $allow_language_code,
+ Country      => $allow_country_code,
 
  Mode     => sub { $allow_from_hash->($Config{$_[0]}->{AllowedMode}, @_) },
  Sort     => sub { $allow_from_hash->($Config{$_[0]}->{AllowedSort}, @_) },
  Type     => sub { $allow_from_hash->($Config{$_[0]}->{AllowedType}, @_) },
- Language => sub { $allow_from_hash->(\%KnownLanguage, @_) },
 
  Debug        => $allow_any,
  AutoContinue => $allow_boolean,
@@ -585,21 +679,24 @@ sub Default
 ##
 my %ArgToParam =
 (
- Mode         => 'type',
- Count        => 'results',
- Start        => 'start',
- Type         => 'format',
  AllowAdult   => 'adult_ok',
  AllowSimilar => 'similar_ok',
- Language     => 'language',
- Sort         => 'sort',
- Radius       => 'radius',
- Street       => 'street',
- City         => 'city',
- State        => 'state',
- PostalCode   => 'zip',
- Location     => 'location',
  AppId        => 'appid',
+ City         => 'city',
+ Count        => 'results',
+ Country      => 'country',
+ Language     => 'language',
+ Lat          => 'latitude',
+ Location     => 'location',
+ Long         => 'longitude',
+ Mode         => 'type',
+ PostalCode   => 'zip',
+ Radius       => 'radius',
+ Sort         => 'sort',
+ Start        => 'start',
+ State        => 'state',
+ Street       => 'street',
+ Type         => 'format',
 );
 
 
@@ -742,22 +839,24 @@ sub Request
     $Param{start}++;
 
     # 'Local' has special required parameters
-    if ($SearchSpace eq 'Local')
+    if ($SearchSpace eq 'Local'
+        and not
+        ## the following are the allowed parameter sets... if one is there,
+        ## we're okay
+        ($Param{location}
+         or
+         $Param{'zip'}
+         or
+         ($Param{'state'} and $Param{'city'})
+         or
+         (defined($Param{'latitude'}) and defined($Param{'longitude'}))
+        ))
     {
-        if (not $Param{location}
-            and
-            not $Param{'zip'}
-            and
-            not $Param{'state'}
-            and
-            not $Param{'city'})
-        {
-            ##
-            ## The diff between $Param{} references in the if() above, and
-            ## the arg names in the error below, is the %ArgToParam mapping
-            ##
-            return _carp_on_error("a 'Local' query must have Location, PostalCode, or City+State");
-        }
+        ##
+        ## The diff between $Param{} references in the if() above, and
+        ## the arg names in the error below, is the %ArgToParam mapping
+        ##
+        return _carp_on_error("a 'Local' query must have at least Lat+Long, Location, PostalCode, or City+State");
     }
 
     ##
@@ -866,7 +965,7 @@ __END__
 
 =head1 NAME
 
-Yahoo::Search - Perl interface to Yahoo! Search's public API.
+Yahoo::Search - Perl interface to the Yahoo! Search public API.
 
 The following search spaces are supported:
 
@@ -979,7 +1078,7 @@ C<phrase> Mode, also described below).
 There are also a number of "Search Meta Words", as described at
 http://help.yahoo.com/help/us/ysearch/basics/basics-04.html and
 http://help.yahoo.com/help/us/ysearch/tips/tips-03.html , which can stand
-along or be combined with C<Doc> searches (and, to some extent, some of the
+along or be combined with I<Doc> searches (and, to some extent, some of the
 others -- YMMV):
 
 =over 4
@@ -1038,12 +1137,15 @@ showing which apply to queries of which search space:
   Start           [X]    [X]    [X]    [X]    [X]     .       .
   Count           [X]    [X]    [X]    [X]    [X]     .       .
 
+  Country         [X]     .      .      .      .      .       .
   AllowSimilar    [X]     .      .      .      .      .       .
   AllowAdult      [X]    [X]    [X]     .      .      .       .
   Type            [X]    [X]    [X]     .      .      .       .
-  Sort             .      .      .     [X]     .      .       .
   Language        [X]     .      .     [X]     .      .       .
+  Sort             .      .      .     [X]    [X]     .       .
 
+  Lat              .      .      .      .     [X]     .       .
+  Long             .      .      .      .     [X]     .       .
   Street           .      .      .      .     [X]     .       .
   City             .      .      .      .     [X]     .       .
   State            .      .      .      .     [X]     .       .
@@ -1099,7 +1201,7 @@ returned.
 =item Count
 
 Indicates how many items should be returned. The default is 10. The maximum
-allowed depends on the search space being queried: B<20> for C<Local>
+allowed depends on the search space being queried: B<20> for I<Local>
 searches, and B<50> for others which support the C<Count> argument.
 
 Note that
@@ -1111,6 +1213,52 @@ and
   $SearchEngine->MaxCount($SearchSpace)
 
 return the maximum count allowed for the given C<$SearchSpace>.
+
+=item Country
+
+Attempts to restrict the I<Doc> search to web servers residing in the named
+country. As of this writing, the Yahoo! web services support the following
+codes for C<Country>:
+
+ code   country
+ ----   ---------------
+  ar    Argentina
+  au    Australia
+  at    Austria
+  be    Belgium
+  br    Brazil
+  ca    Canada
+  cn    China
+  cz    Czech Republic
+  dk    Denmark
+  fi    Finland
+  fr    France
+  de    Germany
+  it    Italy
+  jp    Japan
+  kr    Korea
+  nl    Netherlands
+  no    Norway
+  pl    Poland
+  rf    Russian Federation
+  es    Spain
+  se    Sweden
+  ch    Switzerland
+  tw    Taiwan
+  uk    United Kingdom
+  us    United States
+
+In addition, the code "default" is the same as the lack of a country
+specifier: no country-related restrictions.
+
+
+The above list can be found in C<%Yahoo::Search::KnownCountry>.
+
+Because the list of countries may be updated more often than this Perl API,
+this Perl API does not attempt to restrict the C<Country> value to members
+of this specific list. If you provide a C<Country> value which is not
+supported by Yahoo!'s web services, a "400 Bad Request" error is returned
+in C<@$>.
 
 =item AllowSimilar
 
@@ -1143,16 +1291,12 @@ search space:
  Spell           N/A
  Related         N/A
 
-=item Sort
-
-For I<News> searches, the sort may be C<rank> (the default) or
-C<date>.
-
 =item Language
 
-If provided, restricts the results to documents in the given language. The
-value is an language code such as C<en> (English), C<ja> (Japanese), etc
-(mostly ISO 639-1 codes). These are the codes supported:
+If provided, attempts to restrict the results to documents in the given
+language. The value is an language code such as C<en> (English), C<ja>
+(Japanese), etc (mostly ISO 639-1 codes). As of this writing, the following
+codes are supported:
 
  code  language
  ----  ---------
@@ -1197,6 +1341,26 @@ In addition, the code "default" is the same as the lack of a language
 specifier, and seems to mean a mix of major world languages, skewed toward
 English.
 
+The above list can be found in C<%Yahoo::Search::KnownLanguage>.
+
+Because the list of languages may be updated more often than this Perl API,
+this Perl API does not attempt to restrict the C<Language> value to members
+of this specific list. If you provide a C<Language> value which is not
+supported by Yahoo!'s web services, a "400 Bad Request" error is returned
+in C<@$>.
+
+=item Sort
+
+For I<News> searches, C<sort> may be C<rank> (the default) or C<date>.
+
+For I<Local> searches, C<sort> may be C<relevance> (the default; most
+relevant first), C<distance> (closest first), C<rating> (highest rating
+first), or C<title> (alphabetic sort).
+
+=item Lat
+
+=item Long
+
 =item Street
 
 =item City
@@ -1208,10 +1372,49 @@ English.
 =item Location
 
 These items are for a I<Local> query, and specify the epicenter of the
-search. The epicenter must be provided in one of a variety of ways: via the
-free-text C<Location>, via C<Street> + C<PostalCode>, via C<Street> +
-C<City> + C<State>, via C<PostalCode> alone, or via C<City> + C<State>
-alone.
+search. The epicenter must be provided in one of a variety of ways:
+
+=over 3
+
+=item *
+
+via C<Lat> and C<Long>
+
+=item *
+
+via the free-text C<Location>
+
+=item *
+
+via C<Street> and C<PostalCode>
+
+=item *
+
+via C<Street> and C<City> and C<State>
+
+=item *
+
+via C<PostalCode> alone
+
+=item *
+
+via C<City> and C<State> alone.
+
+=back
+
+The list above is the order of precedence for when multiple fields are sent
+(e.g. if a C<Lat> and C<Long> are sent, they are used regardless of
+whether, say, a C<PostalCode> is used), but it's probably best to send
+exactly only the fields you wish to be used.
+
+C<Lat> and C<Long> are floating point numbers, such as this example:
+
+   Lat  =>  39.224079  # 39 deg 13 min 26.686 sec North
+   Long => -98.541807, # 98 deg 32 min 30.506 sec West
+
+(which happens to be the location of the "Medes Ranch" triangulation
+station, upon which all country, state, etc., boundaries in North America
+were originally based)
 
 C<Street> is the street address, e.e. "701 First Ave". C<PostalCode> is a
 US 5-digit or 9-digit ZIP code (e.g. "94089" or "94089-1234").
@@ -1238,6 +1441,12 @@ search. The value is the radius of the search area, in miles. The default
 radius depends on the search location (urban areas tend to have a smaller
 default radius).
 
+=item AutoContinue
+
+A boolean (default off). If true, turns on the B<potentially dangerous>
+auto-continuation, as described in the docs for C<NextResult> in
+Yahoo::Search::Response.
+
 =item Debug
 
 C<Debug> is a string (defaults to an empty string). If the substring
@@ -1249,11 +1458,13 @@ to stderr.
 Thus, to print all debugging, you'd set C<Debug> to a value such as "C<url
 xml hash>".
 
-=item AutoContinue
+=item PreRequestCallback
 
-A boolean (default off). If true, turns on the B<potentially dangerous>
-auto-continuation, as described in the docs for C<NextResult> in
-Yahoo::Search::Response.
+This is for debugging (I needed it for my own regression-test script). If
+defined, it should be a code ref which accepts a single
+Yahoo::Search::Request object argument. It is called just before Yahoo!'s
+servers are contacted, and if it returns false, the call to Yahoo! is
+aborted (be sure to set C<$@>).
 
 =back
 
@@ -1518,7 +1729,6 @@ as:
   </style>
 
 
-
 B<Note>: all arguments are in key/value pairs, but the C<$space>/C<$query>
 pair (which is required) is required to appear first.
 
@@ -1612,7 +1822,66 @@ The default of true is somewhat obnoxious, but hopefully helps create
 better programs by forcing the programmer to actively think about error
 checking (if even long enough to turn off error reporting).
 
+
+=head1 Global Variables
+
+The following are globally available:
+
+=over 5
+
+=item C<%Yahoo::Search::KnownCountry>
+
+A hash with the known (as of this writing) country codes supported by
+Yahoo! for the C<Country> argument.
+
+=item C<%Yahoo::Search::KnownLanguage>
+
+A hash with the known (as of this writing) language codes supported by
+Yahoo! for the C<Language> argument.
+
+=item C<$Yahoo::Search::RecentRequestUrl>
+
+The most recent REST url actually fetched from Yahoo! (perhaps useful for
+debugging).
+
+=item C<$Yahoo::Search::UseXmlSimple>
+
+If you set this to a true value, the XML returned by Yahoo! will be parsed
+with B<XML::Simple> rather than with the simple XML parser included as part
+of this package (Yahoo::Search::XML). XML::Simple uses XML::Parser under
+the hood, and at least on the systems I've tested it, XML::Parser suffers
+from a crippling memory leak that makes it very undesirable.
+
+However, if Yahoo! changes the XML they return in a way that my simple
+parser can't handle, you can install XML::Simple and set
+C<$Yahoo::Search::UseXmlSimple> and at least have things work (until you
+run out of memory).
+
+The default value of C<$Yahoo::Search::UseXmlSimple> is taken from the
+environment variable C<YAHOO_SEARCH_XMLSIMPLE> if present, and otherwise
+defaults to false
+
+=item C<$Yahoo::Search::Version>
+
+A string in "X.Y.Z" format. The first number, the major version, increments
+with large and/or backwards major incompatible changes. The second number
+(minor version) updates with notable feature additions/changes. The third
+number updates with every new release (and is the only one updated for
+small bug- and typo fix releases).
+
+=back
+
+=head1 Environment
+
+If C<YAHOO_SEARCH_XMLSIMPLE> is set to a true (nonempty, non-"0") value,
+C<$Yahoo::Search::UseXmlSimple> defaults to true. See above.
+
+Yahoo::Search uses LWP to communicate with Yahoo!'s servers; LWP uses
+environment variables such as C<http_proxy> and C<no_proxy>. See the
+perldoc for LWP for more.
+
 =head1 Copyright
+
 
 Copyright (C) 2005 Yahoo! Inc.
 

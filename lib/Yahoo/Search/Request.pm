@@ -162,17 +162,19 @@ sub Fetch
     ##
     ## Fetch -- get the response (which contains xml, hopefully)
     ##
-    my $url = $Request->Url;
 
     if (my $callback = $Request->SearchEngine->Default('PreRequestCallback'))
     {
         if (not $callback->($Request)) {
+            $@ ||= "aborted because PreRequestCallback returned false";
             return ();
         }
     }
 
-    warn "Fetching url: $url\n" if $Request->{Debug} =~ m/url/x;
-    my $response = LWP::UserAgent->new(agent => "Yahoo::Search ($Yahoo::Search::VERSION)", env_proxy  => 1)->request(HTTP::Request->new(GET => $url));
+    $Yahoo::Search::RecentRequestUrl = $Request->Url;
+
+    warn "Fetching url: $Yahoo::Search::RecentRequestUrl\n" if $Request->{Debug} =~ m/url/x;
+    my $response = LWP::UserAgent->new(agent => "Yahoo::Search ($Yahoo::Search::VERSION)", env_proxy  => 1)->request(HTTP::Request->new(GET => $Yahoo::Search::RecentRequestUrl));
 
     ##
     ## Ensure we have a good result
@@ -182,8 +184,13 @@ sub Fetch
         return ();
     }
 
-    if (not $response->is_success) {
-        $@ = "ERROR: " . $response->status_line;
+    if (not $response->is_success)
+    {
+        if ($response->status_line) {
+            $@ = $response->status_line;
+        } else {
+            $@ = "ERROR"; ## unknown error
+        }
         return ();
     }
 
