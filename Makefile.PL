@@ -5,8 +5,8 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
     NAME	  => 'Yahoo::Search',
-    ABSTRACT_FROM => 'Yahoo/Search.pm',
-    VERSION_FROM  => 'Yahoo/Search.pm',
+    ABSTRACT_FROM => 'lib/Yahoo/Search.pm',
+    VERSION_FROM  => 'lib/Yahoo/Search.pm',
     PREREQ_PM	  => {
                        'LWP::UserAgent' => 0,
                        'HTTP::Request'  => 0,

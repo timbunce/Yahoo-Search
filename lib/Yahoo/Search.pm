@@ -9,7 +9,7 @@ use Yahoo::Search::Request;
 ## Copyright (C) 2005 Yahoo! Inc.
 ##
 
-our $VERSION = '1.0.0'; # last num increases monotonically across all versions
+our $VERSION = '1.0.1'; # last num increases monotonically across all versions
 
 ##
 ## CLASS OVERVIEW

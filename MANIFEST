@@ -1,8 +1,8 @@
-Yahoo/Search.pm
-Yahoo/Search/Request.pm
-Yahoo/Search/Response.pm
-Yahoo/Search/Result.pm
-Yahoo/Search/XML.pm
+lib/Yahoo/Search.pm
+lib/Yahoo/Search/Request.pm
+lib/Yahoo/Search/Response.pm
+lib/Yahoo/Search/Result.pm
+lib/Yahoo/Search/XML.pm
 Changes
 Makefile.PL
 MANIFEST
