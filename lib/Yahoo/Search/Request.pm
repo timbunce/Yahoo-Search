@@ -62,6 +62,11 @@ Returns the URI::http object representing the url fetched (or to be
 fetched) from Yahoo's Search servers. The url is actually fetched when the
 C<Request> object's C<Fetch()> method is called.
 
+Note that this does I<not> reflect the fact that a request is changed to a
+POST when request is sufficiently large. Thus, there are times when the url
+represented by the URI::http object returned is not actually fetchable from
+the Yahoo! servers.
+
 =cut
 
 sub Uri
@@ -87,6 +92,10 @@ sub Uri
 
 Like the C<Uri> method, but returns a string with the full url
 fetched (or to be fetched).
+
+Note that this does I<not> reflect the fact that a request is changed to a
+POST when request is sufficiently large. Thus, there are times when the url
+returned is not actually fetchable from the Yahoo! servers.
 
 =cut
 
@@ -152,7 +161,7 @@ Actually contact the Yahoo Search servers, returning a C<Result>
 
 =cut
 
-
+our $UA;
 
 sub Fetch
 {
@@ -174,7 +183,25 @@ sub Fetch
     $Yahoo::Search::RecentRequestUrl = $Request->Url;
 
     warn "Fetching url: $Yahoo::Search::RecentRequestUrl\n" if $Request->{Debug} =~ m/url/x;
-    my $response = LWP::UserAgent->new(agent => "Yahoo::Search ($Yahoo::Search::VERSION)", env_proxy  => 1)->request(HTTP::Request->new(GET => $Yahoo::Search::RecentRequestUrl));
+
+    ## create the useragent object just the first time.
+    $UA ||= LWP::UserAgent->new(agent => "Yahoo::Search ($Yahoo::Search::VERSION)", env_proxy  => 1);
+
+    my $response;
+
+    ##
+    ## Yahoo! servers allow a GET until the GET line (including "GET" and
+    ## ending "\r\n" is 8192 bytes long. The following switches to POST
+    ## once it gets close. (To bring a GET pedantically up to the limit,
+    ## we'd have to switch to POST once what follows the '?' in the URL is
+    ## more than 8186 bytes, but there's really no reason to push right up
+    ## to the limit.)
+    ##
+    if (length($Yahoo::Search::RecentRequestUrl) < 8180) {
+        $response = $UA->get($Yahoo::Search::RecentRequestUrl);
+    } else {
+        $response = $UA->post($Request->{Action}, $Request->{Params});
+    }
 
     ##
     ## Ensure we have a good result

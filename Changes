@@ -1,3 +1,11 @@
+1.2.5   March 19, 2005
+----------------------
+
+  Added support for Y!Q contextual search (via the new 'Context' arg of a
+  Doc search). As part of this, have any request greater than a certain
+  size become a POST.
+
+
 1.1.4   March 10, 2005
 ----------------------
 

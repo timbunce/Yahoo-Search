@@ -9,7 +9,7 @@ use Yahoo::Search::Request;
 ## Copyright (C) 2005 Yahoo! Inc.
 ##
 
-our $VERSION = '1.1.4'; # last num increases monotonically across all versions
+our $VERSION = '1.2.5'; # last num increases monotonically across all versions
 
 ##
 ## CLASS OVERVIEW
@@ -39,6 +39,7 @@ my %Config =
   Doc =>
   {
    Url => 'http://api.search.yahoo.com/WebSearchService/V1/webSearch',
+   ContextUrl => 'http://api.search.yahoo.com/WebSearchService/V1/contextSearch',
 
    MaxCount => 50,
 
@@ -46,6 +47,7 @@ my %Config =
    ## while the values are the defaults for those arguments.
    Defaults => {
                 Mode         => undef,
+                Context      => undef,
                 Count        => 10,
                 Start        => 0,
                 Type         => 'all',
@@ -537,6 +539,8 @@ my %ValidateRoutine =
  AllowAdult   => $allow_boolean,
  AllowSimilar => $allow_boolean,
 
+ Context      => $allow_any,
+
  Street       => $allow_any,
  City         => $allow_any,
  State        => $allow_any,
@@ -683,6 +687,7 @@ my %ArgToParam =
  AllowSimilar => 'similar_ok',
  AppId        => 'appid',
  City         => 'city',
+ Context      => 'context',
  Count        => 'results',
  Country      => 'country',
  Language     => 'language',
@@ -750,14 +755,27 @@ sub Request
         return _carp_on_error("bad search-space identifier, expecting one of: $list");
     }
 
-    if (not defined($QueryText) or length($QueryText) == 0) {
-        return _carp_on_error("missing query");
-    }
-
     ##
     ## %Param holds the key/vals we'll send in the request to Yahoo!
     ##
-    my %Param = ( query => $QueryText );
+    my %Param;
+
+    ##
+    ## Special case for a context document search: query not required
+    ##
+    if (not defined($QueryText) or length($QueryText) == 0)
+    {
+        if ($SearchSpace eq "Doc" and $Args{Context}) {
+            ## query text not required
+        } else {
+            return _carp_on_error("missing query");
+        }
+    }
+    else
+    {
+        ## normal query
+        $Param{query} = $QueryText;
+    }
 
     ##
     ## This can be called as a constructor -- if so, $SearchEngine will be
@@ -830,6 +848,14 @@ sub Request
     ## Do some special per-arg-type processing
     ##
 
+    ##
+    ## If we're doing a context search, be sure to use the proper action url
+    ##
+    my $ActionUrl = $Config{$SearchSpace}->{Url};
+    if ($Param{context}) {
+        $ActionUrl = $Config{$SearchSpace}->{ContextUrl};
+    }
+
     ## ensure that the Count, if given, is not over max
     if (defined $Param{count} and $Param{count} > $Config{$SearchSpace}->{MaxCount}) {
         return _carp_on_error("maximum allowed Count for a $SearchSpace search is $Config{$SearchSpace}->{MaxCount}");
@@ -866,7 +892,7 @@ sub Request
     return Yahoo::Search::Request->new(
                                        SearchEngine => $SearchEngine,
                                        Space  => $SearchSpace,
-                                       Action => $Config{$SearchSpace}->{Url},
+                                       Action => $ActionUrl,
                                        Params => \%Param,
                                        %OtherRequestArgs,
                                       );
@@ -973,7 +999,8 @@ The following search spaces are supported:
 
 =item Doc
 
-Common web search for documents (html, pdf, doc, ...)
+Common web search for documents (html, pdf, doc, ...), including Y!Q
+contextual search.
 
 =item Image
 
@@ -1137,6 +1164,7 @@ showing which apply to queries of which search space:
   Start           [X]    [X]    [X]    [X]    [X]     .       .
   Count           [X]    [X]    [X]    [X]    [X]     .       .
 
+  Context         [X]     .      .      .      .      .       .
   Country         [X]     .      .      .      .      .       .
   AllowSimilar    [X]     .      .      .      .      .       .
   AllowAdult      [X]    [X]    [X]     .      .      .       .
@@ -1213,6 +1241,30 @@ and
   $SearchEngine->MaxCount($SearchSpace)
 
 return the maximum count allowed for the given C<$SearchSpace>.
+
+=item Context
+
+By providing a context string, you change the request from a normal
+document query to a Y!Q contextual query. Y!Q is described at
+
+   http://yq.search.yahoo.com/
+
+The C<Content> string can be raw text, html, etc., and is to provide the
+document search more information about what kind of results are wanted.
+
+For example, without a C<Context>, a document search for "Madonna" returns
+the most popular documents (which are invariably about the famous pop
+singer). However, if you provide a context string even as simple as "Virgin
+Mary", the results skew away from the pop singer toward the Mother of God.
+Since it's likely that a confusion between the two would be less than
+optimal in pretty much every conceivable case, this is a Good Thing.
+
+When a C<Context> is given, the query string itself may be empty. For
+example, if you have the text of a blog entry in C<$BlogText>, you can
+fetch "related links" via:
+
+   use Yahoo::Search AppId => 'my blog stuff';
+   my @Results = Yahoo::Search->Results(Doc => undef, Context => $BlogText);
 
 =item Country
 
@@ -1842,7 +1894,10 @@ Yahoo! for the C<Language> argument.
 =item C<$Yahoo::Search::RecentRequestUrl>
 
 The most recent REST url actually fetched from Yahoo! (perhaps useful for
-debugging).
+debugging). It does I<not> reflect the fact that a request is changed to a
+POST when request is sufficiently large. Thus, there are times when the url
+on C<$Yahoo::Search::RecentRequestUrl> is not actually fetchable from the
+Yahoo! servers.
 
 =item C<$Yahoo::Search::UseXmlSimple>
 
