@@ -9,7 +9,7 @@ use Yahoo::Search::Request;
 ## Copyright (C) 2005 Yahoo! Inc.
 ##
 
-our $VERSION = '1.2.5'; # last num increases monotonically across all versions
+our $VERSION = '1.3.6'; # last num increases monotonically across all versions
 
 ##
 ## CLASS OVERVIEW
@@ -50,20 +50,30 @@ my %Config =
                 Context      => undef,
                 Count        => 10,
                 Start        => 0,
-                Type         => 'all',
+                Type         => 'any',
                 AllowAdult   => 0,
                 AllowSimilar => 0,
                 Language     => undef,
                 Country      => undef,
+                License      => undef,
                },
+
+   AllowedLicense => {
+                      any           => 1, #default
+                      cc_any        => 1,
+                      cc_commercial => 1,
+                      cc_modifiable => 1,
+                        },
 
    AllowedMode => {
                    all    => 1,
                    any    => 1,
                    phrase => 1,
                   },
+
    AllowedType => {
-                     all    => 1,
+                     all    => 1, # deprecated
+                     any    => 1,
 
                      html   => 1,
                      msword => 1,
@@ -88,8 +98,9 @@ my %Config =
                 Mode       => undef,
                 Count      => 10,
                 Start      => 0,
-                Type       => 'all',
+                Type       => 'any',
                 AllowAdult => 0,
+                Color      => undef,
                },
 
    AllowedMode => {
@@ -99,13 +110,21 @@ my %Config =
                   },
 
    AllowedType => {
-                     all  => 1,
+                     all  => 1, # deprecated
+                     any  => 1,
 
                      bmp  => 1,
                      gif  => 1,
                      jpeg => 1,
                      png  => 1,
                     },
+
+   AllowedColor => {
+                    any   => 1, # default
+                    color => 1,
+                    bw    => 1,
+                   }
+
   },
 
   ######################################################################
@@ -121,7 +140,7 @@ my %Config =
                 Mode       => undef,
                 Count      => 10,
                 Start      => 0,
-                Type       => 'all',
+                Type       => 'any',
                 AllowAdult => 0,
                },
 
@@ -132,7 +151,8 @@ my %Config =
                   },
 
    AllowedType => {
-                     all       => 1,
+                     all       => 1, # deprecated
+                     any       => 1,
 
                      avi       => 1,
                      flash     => 1,
@@ -370,9 +390,13 @@ my $allow_language_code = sub
 };
 
 
-## This has different args than the others -- has $hashref prepended
+##
+## This has different args than the others: it has two args ($allow_multi
+## and $hashref) prepended before $space
+##
 my $allow_from_hash = sub
 {
+    my $allow_multi = shift;
     my $hashref = shift; #hash in which to check
     my $space   = shift; #unused
 
@@ -383,10 +407,35 @@ my $allow_from_hash = sub
 
     if (not $hashref) {
         return (1, $val); # can't tell, so say it's valid
-    } elsif ($hashref->{$val}) {
-        return (1, $val); # is specifically valid
-    } else {
+    }
+
+    if (not defined($val) or not length($val))
+    {
         return (0); # not valid
+    }
+
+    if (not $allow_multi)
+    {
+        if ($hashref->{$val}) {
+            return (1, $val); # is specifically valid
+        } else {
+            return (0); # not valid
+        }
+    }
+    else
+    {
+        my @items = split /[+,\s]+/, $val;
+        if (not @items) {
+            return (0); # not valid
+        }
+
+        for my $item (@items)
+        {
+            if (not $hashref->{$item}) {
+                return (0); # not valid
+            }
+        }
+        return (1, $val); # valid
     }
 };
 
@@ -552,9 +601,11 @@ my %ValidateRoutine =
  Language     => $allow_language_code,
  Country      => $allow_country_code,
 
- Mode     => sub { $allow_from_hash->($Config{$_[0]}->{AllowedMode}, @_) },
- Sort     => sub { $allow_from_hash->($Config{$_[0]}->{AllowedSort}, @_) },
- Type     => sub { $allow_from_hash->($Config{$_[0]}->{AllowedType}, @_) },
+ Mode      => sub { $allow_from_hash->(0, $Config{$_[0]}->{AllowedMode}, @_) },
+ Sort      => sub { $allow_from_hash->(0, $Config{$_[0]}->{AllowedSort}, @_) },
+ Type      => sub { $allow_from_hash->(0, $Config{$_[0]}->{AllowedType}, @_) },
+ License   => sub { $allow_from_hash->(1, $Config{$_[0]}->{AllowedLicense}, @_) },
+ Color     => sub { $allow_from_hash->(0, $Config{$_[0]}->{Color}, @_) },
 
  Debug        => $allow_any,
  AutoContinue => $allow_boolean,
@@ -690,8 +741,10 @@ my %ArgToParam =
  Context      => 'context',
  Count        => 'results',
  Country      => 'country',
+ Color        => 'coloration',
  Language     => 'language',
  Lat          => 'latitude',
+ License      => 'license',
  Location     => 'location',
  Long         => 'longitude',
  Mode         => 'type',
@@ -856,12 +909,24 @@ sub Request
         $ActionUrl = $Config{$SearchSpace}->{ContextUrl};
     }
 
-    ## ensure that the Count, if given, is not over max
+    ##
+    ## Ensure that the Count, if given, is not over max
+    ##
     if (defined $Param{count} and $Param{count} > $Config{$SearchSpace}->{MaxCount}) {
         return _carp_on_error("maximum allowed Count for a $SearchSpace search is $Config{$SearchSpace}->{MaxCount}");
     }
 
+    ##
+    ## If License is given, it an have multiple values (space, comma, or
+    ## plus-separated).
+    ##
+    if ($Param{license}) {
+        $Param{license} = [ split /[+,\s]+/, $Param{license} ];
+    }
+
+    ##
     ## In Perl universe, Start is 0-based, but the Y! API's "start" is 1-based.
+    ##
     $Param{start}++;
 
     # 'Local' has special required parameters
@@ -1058,12 +1123,12 @@ of shortcuts to allow simple access, such as the following I<Doc> search:
                                       AppId => "YahooDemo",
                                       # The following args are optional.
                                       # (Values shown are package defaults).
-                                      Mode         => 'all',
-                                      Count        => 10,
+                                      Mode         => 'all', # all words
                                       Start        => 0,
-                                      Type         => 'all',
-                                      AllowAdult   => 0,
-                                      AllowSimilar => 0,
+                                      Count        => 10,
+                                      Type         => 'any', # all types
+                                      AllowAdult   => 0, # no porn, please
+                                      AllowSimilar => 0, # no dups, please
                                       Language     => undef,
                                      );
  warn $@ if $@; # report any errors
@@ -1166,11 +1231,13 @@ showing which apply to queries of which search space:
 
   Context         [X]     .      .      .      .      .       .
   Country         [X]     .      .      .      .      .       .
+  License         [X]     .      .      .      .      .       .
   AllowSimilar    [X]     .      .      .      .      .       .
   AllowAdult      [X]    [X]    [X]     .      .      .       .
   Type            [X]    [X]    [X]     .      .      .       .
   Language        [X]     .      .     [X]     .      .       .
   Sort             .      .      .     [X]    [X]     .       .
+  Color            .     [X]     .      .      .      .       .
 
   Lat              .      .      .      .     [X]     .       .
   Long             .      .      .      .     [X]     .       .
@@ -1312,6 +1379,42 @@ of this specific list. If you provide a C<Country> value which is not
 supported by Yahoo!'s web services, a "400 Bad Request" error is returned
 in C<@$>.
 
+=item License
+
+For C<Doc> searches, can be:
+
+=over 10
+
+=item C<any>
+
+(the default) -- results are not filtered with respect to licenses
+
+=item C<cc_any>
+
+Only items with a Creative Commons license (of any type) are returned.
+See their (horribly designed hard to find anything substantial) site at:
+
+  http://creativecommons.org/
+
+=item C<cc_commercial>
+
+Only items with a Creative Commons license which allows some kind of
+commercial use are returned.
+
+=item C<cc_modifiable>
+
+Only items with a Creative Commons license which allows modification
+(e.g. derived works) of some kind are returned.
+
+=back
+
+You may combine the above to create an intersection, e.g.
+
+   License => "cc_commercial+cc_modifiable"
+
+(space, comma, or plus-separated) returns items which allow I<both> some
+kind of commercial use, and their use in some kinds of derivative works.
+
 =item AllowSimilar
 
 If this boolean is true (the default is false), similar results which would
@@ -1329,19 +1432,21 @@ perfect.
 =item Type
 
 This argument can be used to restrict the results to only a specific file
-type. The default value, C<all>, allows any type (associated with the
-search space) to be returned. Otherwise, the values allowed depend on the
-search space:
+type. The default value, C<any>, allows any type associated with the search
+space to be returned (that is, provides no restriction). Otherwise, the
+values allowed for C<Type> depend on the search space:
 
  Search space    Allowed Type values
  ============    ========================================================
- Doc             all  html msword pdf ppt rss txt xls
- Image           all  bmp gif jpeg png
- Video           all  avi flash mpeg msmedia quicktime realmedia
+ Doc             any  html msword pdf ppt rss txt xls
+ Image           any  bmp gif jpeg png
+ Video           any  avi flash mpeg msmedia quicktime realmedia
  News            N/A
  Local           N/A
  Spell           N/A
  Related         N/A
+
+(Deprecated: you may use C<all> in place of C<any>)
 
 =item Language
 
@@ -1408,6 +1513,26 @@ For I<News> searches, C<sort> may be C<rank> (the default) or C<date>.
 For I<Local> searches, C<sort> may be C<relevance> (the default; most
 relevant first), C<distance> (closest first), C<rating> (highest rating
 first), or C<title> (alphabetic sort).
+
+=item Color
+
+For I<Image> searches, may be C<any> (the default), C<color>, or C<bw>:
+
+=over 10
+
+=item C<any>
+
+No filtering based on colorization or lack thereof
+
+=item C<color>
+
+Only images with color are returned
+
+=item C<bw>
+
+Only black & white / grayscale images are returned
+
+=back
 
 =item Lat
 
