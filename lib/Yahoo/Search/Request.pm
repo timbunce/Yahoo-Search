@@ -172,7 +172,7 @@ sub Fetch
     }
 
     warn "Fetching url: $url\n" if $Request->{Debug} =~ m/url/x;
-    my $response = LWP::UserAgent->new(agent => "Yahoo::Search ($Yahoo::Search::VERSION)")->request(HTTP::Request->new(GET => $url));
+    my $response = LWP::UserAgent->new(agent => "Yahoo::Search ($Yahoo::Search::VERSION)", env_proxy  => 1)->request(HTTP::Request->new(GET => $url));
 
     ##
     ## Ensure we have a good result
