@@ -326,16 +326,17 @@ sub SearchSpace
 
 ##############################################################################
 
-=item $Result->I[ I<separator> ]
 
 =item $Result->i[ I<separator> ]
+
+=item $Result->I[ I<separator> ]
 
 The first (lower-case letter "i") returns the zero-based ordinal of the
 result from among those in the current C<Response>.
 
-The later (capitol letter "I") returns the zero-based ordinal of the result
-from among all search results that might be returned by Yahoo! for the
-given query.
+The latter (upper-case letter "I") returns the zero-based ordinal of the
+result from among all search results that might be returned by Yahoo! for
+the given query.
 
 For example, after
 

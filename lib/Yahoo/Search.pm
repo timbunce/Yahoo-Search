@@ -9,7 +9,7 @@ use Yahoo::Search::Request;
 ## Copyright (C) 2005 Yahoo! Inc.
 ##
 
-our $VERSION = '1.0.2'; # last num increases monotonically across all versions
+our $VERSION = '1.0.3'; # last num increases monotonically across all versions
 
 ##
 ## CLASS OVERVIEW
@@ -925,8 +925,7 @@ However, you need C<use> only B<Yahoo::Search>, which brings in the others as ne
 
 Yahoo::Search provides a rich and full-featured set of classes for
 accessing the various features of Yahoo! Search, and also offers a variety
-of has shortcuts to allow simple access, such as the following I<Doc>
-search:
+of shortcuts to allow simple access, such as the following I<Doc> search:
 
  use Yahoo::Search;
  my @Results = Yahoo::Search->Results(Doc => "Britney latest marriage",
@@ -1073,7 +1072,7 @@ AppId you'd like, but you are encouraged to register it via the link on
 
   http://developer.yahoo.net/
 
-especially if you are creating something that will be widly distributed.
+especially if you are creating something that will be widely distributed.
 
 As mentioned below in I<Defaults and Default Overrides>, it's particularly
 convenient to get the C<AppId> out of the way by putting it on the C<use>
@@ -1109,7 +1108,7 @@ Note that
 
 and
 
-  $SearchEngine->MasCount($SearchSpace)
+  $SearchEngine->MaxCount($SearchSpace)
 
 return the maximum count allowed for the given C<$SearchSpace>.
 
@@ -1137,7 +1136,7 @@ search space:
  Search space    Allowed Type values
  ============    ========================================================
  Doc             all  html msword pdf ppt rss txt xls
- Img             all  bmp gif jpeg png
+ Image           all  bmp gif jpeg png
  Video           all  avi flash mpeg msmedia quicktime realmedia
  News            N/A
  Local           N/A
@@ -1501,7 +1500,7 @@ image-search, where the search term is in the 'C<s>' query string:
 
    use Yahoo::Search AppId => 'my-search-app';
    if (my $term = $cgi->param('s')) {
-       print join "<p>", Yahoo::Search->HtmlResults(Img => $term);
+       print join "<p>", Yahoo::Search->HtmlResults(Image => $term);
    }
 
 The results, however, do look better with some style-sheet attention, such
@@ -1525,9 +1524,9 @@ pair (which is required) is required to appear first.
 
 
 
-=item @html = $SearchEngine->MaxCount($space)
+=item $num = $SearchEngine->MaxCount($space)
 
-=item @html = Yahoo::Search->MaxCount($space)
+=item $num = Yahoo::Search->MaxCount($space)
 
 Returns the maximum allowed C<Count> query-argument for the given search space.
 

@@ -1,3 +1,7 @@
+1.0.3   March 6, 2005
+---------------------
+A few doc typo corrections -- thanks John Gruber
+
 1.0.2   March 1, 2005
 ---------------------
 Added env_proxy to LWP::UserAgent request -- thanks SIMONFLK
