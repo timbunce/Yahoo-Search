@@ -3,7 +3,8 @@ use strict;
 
 =head1 NAME
 
-Yahoo::Search::XML -- simple routines for parsing XML from Yahoo! Search.
+Yahoo::Search::XML -- Simple routines for parsing XML from Yahoo! Search.
+(This package is included in, and automatically loaded by, the Yahoo::Search package.)
 
 =head1 DESCRIPTION
 

@@ -9,7 +9,8 @@ use URI;
 
 =head1 NAME
 
-Yahoo::Search::Request -- container object for a Yahoo! Search request.
+Yahoo::Search::Request -- Container object for a Yahoo! Search request.
+(This package is included in, and automatically loaded by, the Yahoo::Search package.)
 
 =head1 Package Use
 
@@ -142,13 +143,14 @@ sub SearchEngine
 
 
 ##
-## The Spell and Related search spaces have very simple <Result> data --
+## Some search spaces spaces have very simple <Result> data --
 ## they are simple text phrases, and not further nested xml.
 ##
 my %SimpleResultSpace =
 (
  Spell   => 1,
  Related => 1,
+ Terms   => 1,
 );
 
 

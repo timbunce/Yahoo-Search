@@ -1,3 +1,12 @@
+1.4.7  March 31, 2005     jfriedl@yahoo.com
+-------------------------------------------
+  Added support for 'Terms' searches (reports which search terms in some
+  text are important), which Y! announced today.
+
+  Added 'Count' arg to 'Related' searches -- hadn't noticed that it
+  was supported by the backend.
+
+
 1.3.6   March 24, 2005    jfriedl@yahoo.com
 -------------------------------------------
   Changed the 'all' value for Type to 'any' ('all' is still allowed, but

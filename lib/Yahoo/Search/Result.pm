@@ -5,6 +5,7 @@ use strict;
 
 Yahoo::Search::Result -- class representing a single result (single web
 page, image, video file, etc) from a Yahoo! search-engine query.
+(This package is included in, and automatically loaded by, the Yahoo::Search package.)
 
 =head1 Package Use
 
@@ -22,74 +23,94 @@ C<Yahoo::Search-E<gt>Query()>.
 
 This table shows the methods available on a per-search-space basis:
 
-                   Doc   Image  Video  News   Local  Spell Related
-                  -----  -----  -----  -----  -----  ----- -------
-   Next            [X]    [X]    [X]    [X]    [X]    [X]    [X]
-   Prev            [X]    [X]    [X]    [X]    [X]    [X]    [X]
-   Response        [X]    [X]    [X]    [X]    [X]    [X]    [X]
-   Request         [X]    [X]    [X]    [X]    [X]    [X]    [X]
-   SearchSpace     [X]    [X]    [X]    [X]    [X]    [X]    [X]
 
- * I               [X]    [X]    [X]    [X]    [X]    [X]    [X]
- * i               [X]    [X]    [X]    [X]    [X]    [X]    [X]
-   as_html         [X]    [X]    [X]    [X]    [X]    [X]    [X]
-   as_string       [X]    [X]    [X]    [X]    [X]    [X]    [X]
-   Data            [X]    [X]    [X]    [X]    [X]    [X]    [X]
 
- * Url             [X]    [X]    [X]    [X]    [X]     .      .
- * ClickUrl        [X]    [X]    [X]    [X]    [X]     .      .
- * Title           [X]    [X]    [X]    [X]    [X]     .      .
-   TitleAsHtml     [X]    [X]    [X]    [X]    [X]     .      .
-   Link            [X]    [X]    [X]    [X]    [X]     .      .
- * Summary         [X]    [X]    [X]    [X]     .      .      .
-   SummaryAsHtml   [X]    [X]    [X]    [X]     .      .      .
+                                                     Terms
+                                              Related  |
+                                           Spell  |    |
+                                      Local  |    |    |
+                                  News  |    |    |    |
+                            Video  |    |    |    |    |
+                       Image  |    |    |    |    |    |
+                   Doc   |    |    |    |    |    |    |
+                    |    |    |    |    |    |    |    |
+   Next            [X]  [X]  [X]  [X]  [X]  [X]  [X]  [X]
+   Prev            [X]  [X]  [X]  [X]  [X]  [X]  [X]  [X]
+   Response        [X]  [X]  [X]  [X]  [X]  [X]  [X]  [X]
+   Request         [X]  [X]  [X]  [X]  [X]  [X]  [X]  [X]
+   SearchSpace     [X]  [X]  [X]  [X]  [X]  [X]  [X]  [X]
 
- * CacheUrl        [X]     .      .      .      .      .      .
- * CacheSize       [X]     .      .      .      .      .      .
- * ModTimestamp    [X]     .      .     [X]     .      .      .
+ * I               [X]  [X]  [X]  [X]  [X]  [X]  [X]   .
+ * i               [X]  [X]  [X]  [X]  [X]  [X]  [X]   .
+   as_html         [X]  [X]  [X]  [X]  [X]  [X]  [X]   .
+   as_string       [X]  [X]  [X]  [X]  [X]  [X]  [X]   .
+   Data            [X]  [X]  [X]  [X]  [X]  [X]  [X]   .
 
- * Width            .     [X]    [X]     .      .      .      .
- * Height           .     [X]    [X]     .      .      .      .
+ * Url             [X]  [X]  [X]  [X]  [X]   .    .    .
+ * ClickUrl        [X]  [X]  [X]  [X]  [X]   .    .    .
+ * Title           [X]  [X]  [X]  [X]  [X]   .    .    .
+   TitleAsHtml     [X]  [X]  [X]  [X]  [X]   .    .    .
+   Link            [X]  [X]  [X]  [X]  [X]   .    .    .
+ * Summary         [X]  [X]  [X]  [X]   .    .    .    .
+   SummaryAsHtml   [X]  [X]  [X]  [X]   .    .    .    .
 
- * ThumbUrl         .     [X]    [X]    [X]     .      .      .
- * ThumbWidth       .     [X]    [X]    [X]     .      .      .
- * ThumbHeight      .     [X]    [X]    [X]     .      .      .
-   ThumbImg         .     [X]    [X]    [X]     .      .      .
-   ThumbLink        .     [X]    [X]    [X]     .      .      .
+ * CacheUrl        [X]   .    .    .    .    .    .    .
+ * CacheSize       [X]   .    .    .    .    .    .    .
+ * ModTimestamp    [X]   .    .   [X]   .    .    .    .
 
- * HostUrl          .     [X]    [X]     .      .      .      .
- * Copyright        .     [X]    [X]     .      .      .      .
- * Publisher        .     [X]    [X]     .      .      .      .
- * Restrictions     .     [X]    [X]     .      .      .      .
+ * Width            .   [X]  [X]   .    .    .    .    .
+ * Height           .   [X]  [X]   .    .    .    .    .
 
- * Type            [X]    [X]    [X]     .      .      .      .
- * Bytes            .     [X]    [X]     .      .      .      .
- * Channels         .      .     [X]     .      .      .      .
- * Seconds          .      .     [X]     .      .      .      .
- * Duration         .      .     [X]     .      .      .      .
- * Streaming        .      .     [X]     .      .      .      .
+ * ThumbUrl         .   [X]  [X]  [X]   .    .    .    .
+ * ThumbWidth       .   [X]  [X]  [X]   .    .    .    .
+ * ThumbHeight      .   [X]  [X]  [X]   .    .    .    .
+   ThumbImg         .   [X]  [X]  [X]   .    .    .    .
+   ThumbLink        .   [X]  [X]  [X]   .    .    .    .
 
- * SourceName       .      .      .     [X]     .      .      .
-   SourceNameAsHtml .      .      .     [X]     .      .      .
- * SourceUrl        .      .      .     [X]     .      .      .
- * Language         .      .      .     [X]     .      .      .
- * PublishTime      .      .      .     [X]     .      .      .
- * PublishWhen      .      .      .     [X]     .      .      .
+ * HostUrl          .   [X]  [X]   .    .    .    .    .
+ * Copyright        .   [X]  [X]   .    .    .    .    .
+ * Publisher        .   [X]  [X]   .    .    .    .    .
+ * Restrictions     .   [X]  [X]   .    .    .    .    .
 
- * Address          .      .      .      .     [X]     .      .
- * City             .      .      .      .     [X]     .      .
- * State            .      .      .      .     [X]     .      .
- * Phone            .      .      .      .     [X]     .      .
- * Miles            .      .      .      .     [X]     .      .
- * Kilometers       .      .      .      .     [X]     .      .
- * Rating           .      .      .      .     [X]     .      .
- * MapUrl           .      .      .      .     [X]     .      .
- * BusinessUrl      .      .      .      .     [X]     .      .
- * BusinessClickUrl .      .      .      .     [X]     .      .
- * AllMapUrl        .      .      .      .     [X]     .      .
+ * Type            [X]  [X]  [X]   .    .    .    .    .
+ * Bytes            .   [X]  [X]   .    .    .    .    .
+ * Channels         .    .   [X]   .    .    .    .    .
+ * Seconds          .    .   [X]   .    .    .    .    .
+ * Duration         .    .   [X]   .    .    .    .    .
+ * Streaming        .    .   [X]   .    .    .    .    .
 
- * Term             .      .      .      .      .     [X]    [X]
-   TermAsHtml       .      .      .      .      .     [X]    [X]
+ * SourceName       .    .    .   [X]   .    .    .    .
+   SourceNameAsHtml .    .    .   [X]   .    .    .    .
+ * SourceUrl        .    .    .   [X]   .    .    .    .
+ * Language         .    .    .   [X]   .    .    .    .
+ * PublishTime      .    .    .   [X]   .    .    .    .
+ * PublishWhen      .    .    .   [X]   .    .    .    .
+
+ * Address          .    .    .    .   [X]   .    .    .
+ * City             .    .    .    .   [X]   .    .    .
+ * State            .    .    .    .   [X]   .    .    .
+ * Phone            .    .    .    .   [X]   .    .    .
+ * Miles            .    .    .    .   [X]   .    .    .
+ * Kilometers       .    .    .    .   [X]   .    .    .
+ * Rating           .    .    .    .   [X]   .    .    .
+ * MapUrl           .    .    .    .   [X]   .    .    .
+ * BusinessUrl      .    .    .    .   [X]   .    .    .
+ * BusinessClickUrl .    .    .    .   [X]   .    .    .
+ * AllMapUrl        .    .    .    .   [X]   .    .    .
+
+ * Term             .    .    .    .    .   [X]  [X]  [X]
+   TermAsHtml       .    .    .    .    .   [X]  [X]  [X]
+
+                    |    |    |    |    |    |    |    |
+                   Doc   |    |    |    |    |    |    |
+                       Image  |    |    |    |    |    |
+                            Video  |    |    |    |    |
+                                  News  |    |    |    |
+                                      Local  |    |    |
+                                           Spell  |    |
+                                              Related  |
+                                                     Terms
+
 
 Those items marked with a '*' are also available via the C<Data> method
 
@@ -184,6 +205,7 @@ my %ItemsBySpace =
  News    => [@CommonItems, qw"SourceName SourceUrl Language ModTimestamp PublishTime ThumbUrl ThumbWidth ThumbHeight"],
  Spell   => [@CommonItems,   "Term"],
  Related => [@CommonItems,   "Term"],
+ Terms   => [@CommonItems,   "Term"],
 );
 
 
@@ -570,7 +592,13 @@ sub as_html
     if ($SearchSpace eq "Related")
     {
         my $item = $Result->TermAsHtml;
-        return "Also try: $item";
+        return "Also try: <i>$item</i>";
+    }
+
+    if ($SearchSpace eq "Terms")
+    {
+        my $item = $Result->TermAsHtml;
+        return "Term: <i>$item</i>";
     }
 
     return "???";
@@ -1494,10 +1522,10 @@ sub BusinessClickUrl
 
 =item $Result->TermAsHtml
 
-(I<Appropriate for B<Spell> and B<Related> search results>)
+(I<Appropriate for B<Spell>, B<Related>, and B<Terms> search results>)
 
 C<Term> returns the term associated with the result. If an optional
-argument is provided and is true, the title text is returned as html.
+argument is provided and is true, the term text is returned as html.
 
 C<TermAsHtml> is the same as
 

@@ -4,8 +4,9 @@ use Yahoo::Search::Result;
 
 =head1 NAME
 
-Yahoo::Search::Response -- container object for the result set of one query
+Yahoo::Search::Response -- Container object for the result set of one query
 to the Yahoo! Search API.
+(This package is included in, and automatically loaded by, the Yahoo::Search package.)
 
 =head1 Package Use
 

@@ -8,8 +8,14 @@ use Yahoo::Search::Request;
 ## Written by Jeffrey Friedl <jfriedl@yahoo.com>
 ## Copyright (C) 2005 Yahoo! Inc.
 ##
+## Master source:
+##
+##   http://search.cpan.org/search?mode=module&n=1&query=Yahoo::Search
+##
 
-our $VERSION = '1.3.6'; # last num increases monotonically across all versions
+our $VERSION = '1.4.7'; # Last num increases monotonically across all versions.
+                        # See "Changes" in the CPAN package for version info.
+
 
 ##
 ## CLASS OVERVIEW
@@ -38,7 +44,7 @@ my %Config =
   #
   Doc =>
   {
-   Url => 'http://api.search.yahoo.com/WebSearchService/V1/webSearch',
+   Url        => 'http://api.search.yahoo.com/WebSearchService/V1/webSearch',
    ContextUrl => 'http://api.search.yahoo.com/WebSearchService/V1/contextSearch',
 
    MaxCount => 50,
@@ -57,6 +63,8 @@ my %Config =
                 Country      => undef,
                 License      => undef,
                },
+
+   QueryOptional => 1,
 
    AllowedLicense => {
                       any           => 1, #default
@@ -226,6 +234,20 @@ my %Config =
                   },
   },
 
+
+  Terms =>
+  {
+   Url => 'http://api.search.yahoo.com/ContentAnalysisService/V1/termExtraction',
+
+   Defaults => {
+                Context => undef,
+               },
+   Required => {
+                Context => 1,
+               },
+   QueryOptional => 1,
+  },
+
   Spell =>
   {
    Url => 'http://api.search.yahoo.com/WebSearchService/V1/spellingSuggestion',
@@ -234,6 +256,9 @@ my %Config =
   Related =>
   {
    Url => 'http://api.search.yahoo.com/WebSearchService/V1/relatedSuggestion',
+   Defaults => {
+                Count => 10,
+               },
   },
 );
 
@@ -809,16 +834,30 @@ sub Request
     }
 
     ##
+    ## Ensure that required args are there
+    ##
+    if (my $ref = $Config{$SearchSpace}->{Required})
+    {
+        for my $arg (keys %$ref)
+        {
+            if (not defined($Args{$arg}) or not length($Args{$arg})) {
+                return _carp_on_error("argument '$arg' required");
+            }
+        }
+    }
+
+
+    ##
     ## %Param holds the key/vals we'll send in the request to Yahoo!
     ##
     my %Param;
 
     ##
-    ## Special case for a context document search: query not required
+    ## Special case for some searches: query not required
     ##
     if (not defined($QueryText) or length($QueryText) == 0)
     {
-        if ($SearchSpace eq "Doc" and $Args{Context}) {
+        if ($Args{Context} and $Config{$SearchSpace}->{QueryOptional}) {
             ## query text not required
         } else {
             return _carp_on_error("missing query");
@@ -829,6 +868,7 @@ sub Request
         ## normal query
         $Param{query} = $QueryText;
     }
+
 
     ##
     ## This can be called as a constructor -- if so, $SearchEngine will be
@@ -902,10 +942,12 @@ sub Request
     ##
 
     ##
-    ## If we're doing a context search, be sure to use the proper action url
+    ## If we're doing a Doc context search, be sure to use the proper
+    ## action url
     ##
     my $ActionUrl = $Config{$SearchSpace}->{Url};
-    if ($Param{context}) {
+
+    if ($Param{context} and $Config{$SearchSpace}->{ContextUrl}) {
         $ActionUrl = $Config{$SearchSpace}->{ContextUrl};
     }
 
@@ -1024,7 +1066,7 @@ sub HtmlResults
 ##
 ## A way to bypass explicit Request and Response objects, jumping from a
 ## SearchEngine (or nothing) directly to a list of terms
-## (For Spell and Related searches)
+## (For Spell, Related, and Terms searches)
 ##
 sub Terms
 {
@@ -1083,6 +1125,11 @@ News article search
 
 Yahoo! Local area (ZIP-code-based Yellow-Page like search)
 
+=item Terms
+
+A pseudo-search to report the important search terms from the provided
+content or content+query.
+
 =item Spell
 
 A pseudo-search to fetch a "did you mean?" spelling suggestion for a search term.
@@ -1110,13 +1157,18 @@ The full documentation for this suite of classes is spread among these packages:
    Yahoo::Search::Response
    Yahoo::Search::Result
 
-However, you need C<use> only B<Yahoo::Search>, which brings in the others as needed.
+However, you need C<use> only B<Yahoo::Search>, which brings in the others
+as needed.
+
+In the common case, you need read only the first and the last
+(Yahoo::Search to create a query, and Yahoo::Search::Result to interpret
+the results).
 
 =head1 SYNOPSIS
 
 Yahoo::Search provides a rich and full-featured set of classes for
 accessing the various features of Yahoo! Search, and also offers a variety
-of shortcuts to allow simple access, such as the following I<Doc> search:
+of shortcuts to allow simple access, such as the following B<Doc> search:
 
  use Yahoo::Search;
  my @Results = Yahoo::Search->Results(Doc => "Britney latest marriage",
@@ -1145,14 +1197,14 @@ of shortcuts to allow simple access, such as the following I<Doc> search:
  }
 
 The first argument to C<Results> indicates which search space is to be
-queried (in this case, I<Doc>). The second argument is the search term or
+queried (in this case, B<Doc>). The second argument is the search term or
 phrase (described in detail in the next section). Subsequent arguments are
 optional key/value pairs (described in detail in the section after that) --
-the ones shown in the example are those allowed for a I<Doc> query, with
+the ones shown in the example are those allowed for a B<Doc> query, with
 the values shown being the defaults.
 
 C<Results> returns a list of Yahoo::Search::Result objects, one per item
-(in the case of a I<Doc> search, an item is a web page, I<pdf> document,
+(in the case of a B<Doc> search, an item is a web page, I<pdf> document,
 I<doc> document, etc.). The methods available to a C<Result> object are
 dependent upon the search space of the original query -- see
 Yahoo::Search::Result documentation for the complete list.
@@ -1170,7 +1222,7 @@ C<phrase> Mode, also described below).
 There are also a number of "Search Meta Words", as described at
 http://help.yahoo.com/help/us/ysearch/basics/basics-04.html and
 http://help.yahoo.com/help/us/ysearch/tips/tips-03.html , which can stand
-along or be combined with I<Doc> searches (and, to some extent, some of the
+along or be combined with B<Doc> searches (and, to some extent, some of the
 others -- YMMV):
 
 =over 4
@@ -1222,35 +1274,35 @@ As mentioned above, the arguments allowed in a C<Query> call depend upon
 the search space of the query. Here is a table of the possible arguments,
 showing which apply to queries of which search space:
 
-                  Doc   Image  Video  News   Local  Spell  Related
-                 -----  -----  -----  -----  -----  -----  -------
-  AppId           [X]    [X]    [X]    [X]    [X]    [X]     [X]
-  Mode            [X]    [X]    [X]    [X]    [X]     .       .
-  Start           [X]    [X]    [X]    [X]    [X]     .       .
-  Count           [X]    [X]    [X]    [X]    [X]     .       .
+                  Doc   Image  Video  News   Local  Spell Related Terms
+                 -----  -----  -----  -----  -----  ----- ------- -----
+  AppId           [X]    [X]    [X]    [X]    [X]    [X]    [X]    [X]
+  Mode            [X]    [X]    [X]    [X]    [X]     .      .      .
+  Start           [X]    [X]    [X]    [X]    [X]     .      .      .
+  Count           [X]    [X]    [X]    [X]    [X]     .     [X]     .
 
-  Context         [X]     .      .      .      .      .       .
-  Country         [X]     .      .      .      .      .       .
-  License         [X]     .      .      .      .      .       .
-  AllowSimilar    [X]     .      .      .      .      .       .
-  AllowAdult      [X]    [X]    [X]     .      .      .       .
-  Type            [X]    [X]    [X]     .      .      .       .
-  Language        [X]     .      .     [X]     .      .       .
-  Sort             .      .      .     [X]    [X]     .       .
-  Color            .     [X]     .      .      .      .       .
+  Context         [X]     .      .      .      .      .      .     [X]
+  Country         [X]     .      .      .      .      .      .      .
+  License         [X]     .      .      .      .      .      .      .
+  AllowSimilar    [X]     .      .      .      .      .      .      .
+  AllowAdult      [X]    [X]    [X]     .      .      .      .      .
+  Type            [X]    [X]    [X]     .      .      .      .      .
+  Language        [X]     .      .     [X]     .      .      .      .
+  Sort             .      .      .     [X]    [X]     .      .      .
+  Color            .     [X]     .      .      .      .      .      .
+      .
+  Lat              .      .      .      .     [X]     .      .      .
+  Long             .      .      .      .     [X]     .      .      .
+  Street           .      .      .      .     [X]     .      .      .
+  City             .      .      .      .     [X]     .      .      .
+  State            .      .      .      .     [X]     .      .      .
+  PostalCode       .      .      .      .     [X]     .      .      .
+  Location         .      .      .      .     [X]     .      .      .
+  Radius           .      .      .      .     [X]     .      .      .
 
-  Lat              .      .      .      .     [X]     .       .
-  Long             .      .      .      .     [X]     .       .
-  Street           .      .      .      .     [X]     .       .
-  City             .      .      .      .     [X]     .       .
-  State            .      .      .      .     [X]     .       .
-  PostalCode       .      .      .      .     [X]     .       .
-  Location         .      .      .      .     [X]     .       .
-  Radius           .      .      .      .     [X]     .       .
-
-  AutoContinue    [X]    [X]    [X]    [X]    [X]    [X]     [X]
-  Debug           [X]    [X]    [X]    [X]    [X]    [X]     [X]
-  PreRequestCallback [X] [X]    [X]    [X]    [X]    [X]     [X]
+  AutoContinue    [X]    [X]    [X]    [X]    [X]     .      .      .
+  Debug           [X]    [X]    [X]    [X]    [X]    [X]    [X]    [X]
+  PreRequestCallback [X] [X]    [X]    [X]    [X]    [X]    [X]    [X]
 
 Here are details of each:
 
@@ -1311,8 +1363,8 @@ return the maximum count allowed for the given C<$SearchSpace>.
 
 =item Context
 
-By providing a context string, you change the request from a normal
-document query to a Y!Q contextual query. Y!Q is described at
+By providing a context string to a B<Doc> query, you change the request
+from a normal document query to a Y!Q contextual query. Y!Q is described at
 
    http://yq.search.yahoo.com/
 
@@ -1333,9 +1385,11 @@ fetch "related links" via:
    use Yahoo::Search AppId => 'my blog stuff';
    my @Results = Yahoo::Search->Results(Doc => undef, Context => $BlogText);
 
+In a B<Terms> search, C<Context> is required.
+
 =item Country
 
-Attempts to restrict the I<Doc> search to web servers residing in the named
+Attempts to restrict the B<Doc> search to web servers residing in the named
 country. As of this writing, the Yahoo! web services support the following
 codes for C<Country>:
 
@@ -1445,6 +1499,7 @@ values allowed for C<Type> depend on the search space:
  Local           N/A
  Spell           N/A
  Related         N/A
+ Term            N/A
 
 (Deprecated: you may use C<all> in place of C<any>)
 
@@ -1508,15 +1563,15 @@ in C<@$>.
 
 =item Sort
 
-For I<News> searches, C<sort> may be C<rank> (the default) or C<date>.
+For B<News> searches, C<sort> may be C<rank> (the default) or C<date>.
 
-For I<Local> searches, C<sort> may be C<relevance> (the default; most
+For B<Local> searches, C<sort> may be C<relevance> (the default; most
 relevant first), C<distance> (closest first), C<rating> (highest rating
 first), or C<title> (alphabetic sort).
 
 =item Color
 
-For I<Image> searches, may be C<any> (the default), C<color>, or C<bw>:
+For B<Image> searches, may be C<any> (the default), C<color>, or C<bw>:
 
 =over 10
 
@@ -1548,7 +1603,7 @@ Only black & white / grayscale images are returned
 
 =item Location
 
-These items are for a I<Local> query, and specify the epicenter of the
+These items are for a B<Local> query, and specify the epicenter of the
 search. The epicenter must be provided in one of a variety of ways:
 
 =over 3
@@ -1613,7 +1668,7 @@ specification.
 
 =item Radius
 
-For I<Local> searches, indicates how wide an area around the epicenter to
+For B<Local> searches, indicates how wide an area around the epicenter to
 search. The value is the radius of the search area, in miles. The default
 radius depends on the search location (urban areas tend to have a smaller
 default radius).
@@ -1727,8 +1782,8 @@ made via the search-engine object). For example:
                                          PostalCode => 95014);
 
 Now, calls to the various query functions (C<Query>, C<Results>) via this
-C<$SearchEngine> will use these defaults (I<Image> searches, for example,
-will be with C<AllowAdult> set to true, and I<Local> searches will be
+C<$SearchEngine> will use these defaults (B<Image> searches, for example,
+will be with C<AllowAdult> set to true, and B<Local> searches will be
 centered at ZIP code 95014.) All will return up to 25 results.
 
 In this example:
@@ -1739,7 +1794,7 @@ In this example:
 The query is made with C<AppId> as 'C<Bobs_Fish_Mart>' and C<AllowAdult>
 true (both via C<$SearchEngine>), but C<Count> is 20 because explicit args
 override the default in C<$SearchEngine>. The C<PostalCode> arg does not
-apply too an I<Image> search, so the default provided from C<SearchEngine>
+apply too an B<Image> search, so the default provided from C<SearchEngine>
 is not needed with this particular query.
 
 B<Defaults on the 'use' line>
@@ -1776,7 +1831,7 @@ On error, sets C<$@> and returns nothing.
 =item $Request = Yahoo::Search->Request($space => $query, ...args...)
 
 Creates a C<Request> object representing a search of the named search space
-(I<Doc>, I<Image>, etc.) of the given query string.
+(B<Doc>, B<Image>, etc.) of the given query string.
 
 On error, sets C<$@> and returns nothing.
 
@@ -1846,12 +1901,67 @@ pair (which is required) is required to appear first.
 
 =item @links = Yahoo::Search->Terms($space => $query, ...args...)
 
-A super shortcut for I<Spell> and I<Related> search spaces, returns the
-list of spelling-or related-search suggestions, respectively.
+A super shortcut for B<Spell>, B<Related>, and B<Terms> search spaces,
+returns the list of spelling suggestions, related-search suggestions, or
+important search terms, respectively.
 
 B<Note>: all arguments are in key/value pairs, but the C<$space>/C<$query>
-pair (which is required) is required to appear first.
+pair (which is required) is required to appear first. For a B<Terms>
+search, the C<$query> may be C<undef> (and in in any case, a B<Terms>
+search requires a C<Context> argument).
 
+
+For example,
+
+   use Yahoo::Search AppId => "YahooDemo";
+   for my $term (Yahoo::Search->Terms(Related => "Tivo")) {
+       print $term , "\n";
+   }
+
+displays something along the lines of:
+
+   directv tivo
+   hd tivo
+   tivo community
+   tivo forum
+   tivo upgrade
+   tivo rebate
+   dvd recorder tivo
+   direct tv tivo
+   tivo to go
+   hdtv tivo
+
+
+Here's an example with the B<Terms> search space:
+
+   use Yahoo::Search AppId => "YahooDemo";
+
+   my $Context = << '*END*';
+   We the People of the United States, in Order to form a more perfect
+   Union, establish Justice, insure domestic Tranquility, provide for the
+   common defence, promote the general Welfare, and secure the Blessings of
+   Liberty to ourselves and our Posterity, do ordain and establish this
+   Constitution for the United States of America.
+   *END*
+
+   for my $term (Yahoo::Search->Terms(Terms => undef, Context => $Context)) {
+       print $term, "\n";
+   }
+
+displays something along the lines of:
+
+  insure domestic tranquility
+  promote the general welfare
+  domestic tranquility
+  united states
+  states of america
+  united states of america
+  posterity
+  blessings
+  constitution
+  perfect union
+
+Note that a B<Spell> search returns at most one term.
 
 
 
