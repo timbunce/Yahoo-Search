@@ -1,0 +1,17 @@
+This is the Perl interface to Yahoo! Search's web services.
+
+This package provides a simple but complete programmatic interface to
+Yahoo's document search, image search, video search, news search, and
+"Local" search, as well as its "related terms" and "did you misspell?"
+features.
+
+It uses their XML web services behind the scenes (no screen scraping), so
+is fast and consistent.
+
+For more info about the underlying service this package uses, see
+http://developer.yahoo.net/
+
+
+Written by Jeffrey Friedl <jfriedl@yahoo.com>
+The entire work Copyright (C) 2005 Yahoo! Inc.
+
