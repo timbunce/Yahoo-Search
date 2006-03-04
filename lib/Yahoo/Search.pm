@@ -6,15 +6,17 @@ use Yahoo::Search::Request;
 ##
 ## This is the interface to Yahoo!'s web search API.
 ## Written by Jeffrey Friedl <jfriedl@yahoo.com>
-## Copyright (C) 2005 Yahoo! Inc.
+##
+## Copyright 2005 Yahoo! Inc.
 ##
 ## Master source:
 ##
 ##   http://search.cpan.org/search?mode=module&n=1&query=Yahoo::Search
 ##
 
-our $VERSION = '1.4.7'; # Last num increases monotonically across all versions.
-                        # See "Changes" in the CPAN package for version info.
+our $VERSION = '1.5.8'; # Last num increases monotonically across all versions.
+                        # See the "Changes" filee (comes with the CPAN package)
+                        # for version history.
 
 
 ##

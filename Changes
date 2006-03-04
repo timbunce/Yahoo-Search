@@ -1,3 +1,17 @@
+1.5.8  March 2, 2006     jfriedl@yahoo.com
+-------------------------------------------  
+  On a bad-request error, the error message returned in the XML is supplied
+  in $@, if available. (Otherwise, the HTTP status line message is
+  returned, as was the previous action.)
+
+  XML parser can now handle CDATA, and is more robust in general.
+
+  Fixed an XML parser bug WRT numeric entities (thanks to Ask Hansen, who
+  sent the report and fix in in November -- my bad for sitting on it so
+  long).
+
+
+
 1.4.7  March 31, 2005     jfriedl@yahoo.com
 -------------------------------------------
   Added support for 'Terms' searches (reports which search terms in some

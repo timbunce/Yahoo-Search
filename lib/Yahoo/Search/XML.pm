@@ -4,7 +4,8 @@ use strict;
 =head1 NAME
 
 Yahoo::Search::XML -- Simple routines for parsing XML from Yahoo! Search.
-(This package is included in, and automatically loaded by, the Yahoo::Search package.)
+(This package is included in, and automatically loaded by, the
+Yahoo::Search package.)
 
 =head1 DESCRIPTION
 
@@ -17,8 +18,7 @@ be called, uh, XML::SuperDuperSimple.
 
 The end result is identical to what XML::Simple would produce, at least for
 the XML the Yahoo! sends back. It may well be useful for other things that
-use a similarly small subset of XML notation. This does not support
-comments or CDATA, for example, because Yahoo! doesn't send it back.
+use a similarly small subset of XML notation.
 
 This package is also much faster than XML::Simple / XML::Parser, producing
 the same output 41 times faster, in my tests. That's the benefit of not
@@ -75,7 +75,11 @@ sub End
 
     if ($node->{Data})
     {
-        die "oops" if $node->{Char} ne "";
+        if ($node->{Char} =~ m/^\s*$/) {
+            $node->{Char} = "";
+        } else {
+            die "oops [$node->{Char}]";
+        }
         $val = $node->{Data};
     }
     elsif ($node->{Char} ne "")
@@ -114,8 +118,8 @@ sub _entity($)
     my $name = shift;
     if (my $val = $EntityDecode{$name}) {
         return $val;
-    } elsif ($val =~ m/^\d+$/) {
-        return chr($val);
+    } elsif ($val =~ m/^#(\d+)$/) {
+        return chr($1);
     } else {
         die "unknown entity &$name;";
     }
@@ -135,16 +139,22 @@ sub Parse($)
     @stack = {};
 
     ## get rid of leading <?xml> tag
-    $xml =~ m/\A <\?xml.*?> /xgc;
+    $xml =~ m/\A <\?xml.*?> /xgcs;
 
     while (pos($xml) < length($xml))
     {
+        #my $x = substr($xml, pos($xml), 30);
+        #$x .= "..." if length($x) == 30;
+        #$x =~ s/\n/\\n/g;
+        #my $STACK = join ">", map { $_->{Tag} } @stack;
+        #print "[$STACK] now at [$x]\n";
+
         ##
         ## Nab <open>, </close>, and <unary/> tags...
         ##
         if ($xml =~ m{\G
                       <(/?)       # $1 - true if an ending tag
-                       (\w+)      # $2 - tag name
+                       ([:\w]+)      # $2 - tag name
                        (\s[^>]*)? # $3 - attributes (and possible final '/')
                       >}xgc)
         {
@@ -158,7 +168,7 @@ sub Parse($)
                 my %A;
                 if ($Attribs)
                 {
-                    while ($Attribs =~ m/(\w+)=(?: "([^\"]*)" | '([^\']*)'  )/xg) {
+                    while ($Attribs =~ m/([:\w]+)=(?: "([^\"]*)" | '([^\']*)'  )/xg) {
                         $A{$1} = de_grok(defined($3) ? $3 : $2);
                     }
                 }
@@ -168,13 +178,17 @@ sub Parse($)
                 }
             }
         }
-        elsif ($xml =~ m/\G<!--.*?-->/xgc)
+        elsif ($xml =~ m/\G<!--.*?-->/xgcs)
         {
             ## comment -- ignore
         }
         ##
         ## Nab raw text  / entities
         ##
+        elsif ($xml =~ m/\G <!\[CDATA\[(.*?)\]\]>/xgcs)
+        {
+            Char($1);
+        }
         elsif ($xml =~ m/\G ([^<>]+)/xgc)
         {
             Char(de_grok($1));

@@ -213,21 +213,27 @@ sub Fetch
         return ();
     }
 
+    ##
+    ## Nab (and if debugging, report) the xml
+    ##
+    my $xml = $response->content;
+    print $xml, "\n" if $Request->{Debug} =~ m/xml/x;
+
+    ##
+    ## Even if the response is not successful, it may still be XML and may
+    ## have an error message in it.
+    ##
     if (not $response->is_success)
     {
-        if ($response->status_line) {
+        if ($xml and $xml =~ m{<Message>(.+?)</Message>}s) {
+            $@ = "Bad Request: $1";
+        } elsif ($response->status_line) {
             $@ = $response->status_line;
         } else {
             $@ = "ERROR"; ## unknown error
         }
         return ();
     }
-
-    ##
-    ## Nab (and if debugging, report) the xml
-    ##
-    my $xml = $response->content;
-    warn $xml, "\n" if $Request->{Debug} =~ m/xml/x;
 
     if (not $xml) {
         $@ = "empty response from Yahoo server";
