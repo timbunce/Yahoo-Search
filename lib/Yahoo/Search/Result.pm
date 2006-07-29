@@ -920,9 +920,6 @@ sub ThumbImg
     my $Height = $Result->ThumbHeight;
 
     if ($SRC) {
-if (not defined $Width or not defined $Height) {
-    warn "missing one o W/H=$Width/$Height\n";
-}
         return "<img class=yImg $SRC width=$Width height=$Height>";
     } else {
         return ();
