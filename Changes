@@ -1,3 +1,14 @@
+1.6.9  July 29, 2006     jfriedl@yahoo.com
+-------------------------------------------  
+  Yahoo! yet again changed their XML in a way incompatible with
+  Yahoo::Search::XML. I can't really blame them, since their XML is quite
+  legal -- the problem is Yahoo::Search::XML.
+
+  I've updated Yahoo::Search::XML to handle the new XML, and updated
+  Yahoo::Search::Request to be a bit more graceful, reverting to
+  XML::Simple (if it exists) when Yahoo::Search::XML can't hanldle things.
+
+
 1.5.8  March 2, 2006     jfriedl@yahoo.com
 -------------------------------------------  
   On a bad-request error, the error message returned in the XML is supplied

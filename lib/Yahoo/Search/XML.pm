@@ -1,6 +1,21 @@
 package Yahoo::Search::XML;
 use strict;
 
+our $VERSION = "20060729.004";
+
+##
+## Version history:
+##
+##    20060729.004
+##        * handle <wbr/> tags being added by Yahoo!
+##        * slightly better error messages
+##
+##    20060428.003 --
+##        * ignore <!DOCTYPE...> type tags
+##        * allow '-' in a tag name
+##        * properly handle self-closing tags with no attributes, e.g. "<foo/>"
+##        * added atomic-parens in one area to increase efficiency
+
 =head1 NAME
 
 Yahoo::Search::XML -- Simple routines for parsing XML from Yahoo! Search.
@@ -32,6 +47,7 @@ Feb 2005
 
 =cut
 
+my $error;
 my @stack;
 
 ##
@@ -62,6 +78,14 @@ sub Char
     $stack[-1]->{Char} .= $str;
 }
 
+sub _error($$)
+{
+    my $line = shift;
+    my $msg = shift;
+
+    die "Error in Yahoo::Search::XML on line $line: $msg\n";
+}
+
 
 ##
 ## Process an end tag
@@ -73,18 +97,25 @@ sub End
 
     my $val;
 
+    ##
+    ## There is {Data} if there were xml tags between this $tag's start and
+    ## the end we're processing now.
+    ##
+    ## There's {Char} if text was between.
+    ##
+    ## We never expect both, so we watch out for that here...
+    ##
     if ($node->{Data})
     {
         if ($node->{Char} =~ m/^\s*$/) {
             $node->{Char} = "";
         } else {
-            die "oops [$node->{Char}]";
+            _error(__LINE__, "not expecting both text and structure as content of <$tag>");
         }
         $val = $node->{Data};
     }
     elsif ($node->{Char} ne "")
     {
-        die "oops" if $node->{Data};
         $val = $node->{Char};
     }
     else
@@ -121,7 +152,7 @@ sub _entity($)
     } elsif ($val =~ m/^#(\d+)$/) {
         return chr($1);
     } else {
-        die "unknown entity &$name;";
+        _error(__LINE__, "unknown entity &$name;");
     }
 }
 
@@ -138,7 +169,7 @@ sub Parse($)
 
     @stack = {};
 
-    ## get rid of leading <?xml> tag
+    ## skip past the leading <?xml> tag
     $xml =~ m/\A <\?xml.*?> /xgcs;
 
     while (pos($xml) < length($xml))
@@ -153,16 +184,20 @@ sub Parse($)
         ## Nab <open>, </close>, and <unary/> tags...
         ##
         if ($xml =~ m{\G
-                      <(/?)       # $1 - true if an ending tag
-                       ([:\w]+)      # $2 - tag name
-                       (\s[^>]*)? # $3 - attributes (and possible final '/')
+                      <(/?)              # $1 - true if an ending tag
+                       ( (?> [-:\w]+ ) ) # $2 - tag name
+                       ([^>]*)           # $3 - attributes (and possible final '/')
                       >}xgc)
         {
             my ($IsEnd, $TagName, $Attribs) = ($1, $2, $3);
 
             my $IsImmediateEnd = 1 if ($Attribs and $Attribs =~ s{/$}{});
 
-            if ($IsEnd) {
+            if ($TagName eq 'wbr')
+            {
+                ## skip it
+            }
+            elsif ($IsEnd) {
                 End($TagName);
             } else {
                 my %A;
@@ -182,6 +217,10 @@ sub Parse($)
         {
             ## comment -- ignore
         }
+        elsif ($xml =~ m/\G<![A-Z][^>]+>/xgcs)
+        {
+            ## <!DOCTYPE>, etc. -- ignore
+        }
         ##
         ## Nab raw text  / entities
         ##
@@ -197,14 +236,14 @@ sub Parse($)
         {
             my ($str) = $xml =~ m/\G(.{1,40})/;
             $str .= "..." if length($str) == 40;
-            die "bad XML parse at \"$str\"";
+            _error(__LINE__, "bad XML parse at \"$str\"");
         }
     }
 
     #use Data::Dumper; print Data::Dumper::Dumper(\@stack), "\n";
-    die "oops" if @stack != 1;
-    die "oops" if not $stack[0]->{Data};
-    die "oops" if keys(%{ $stack[0]->{Data}} ) != 1;
+    _error(__LINE__, '@stack != 1') if @stack != 1;
+    _error(__LINE__, "not data") if not $stack[0]->{Data};
+    _error(__LINE__, "keys not 1") if keys(%{ $stack[0]->{Data}} ) != 1;
     my ($tree) = values(%{$stack[0]->{Data}});
     return $tree;
 }

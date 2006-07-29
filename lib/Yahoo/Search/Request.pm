@@ -7,6 +7,22 @@ use LWP::UserAgent;
 use HTTP::Request;
 use URI;
 
+
+my $have_XML_Simple; # undef means 'not yet tested'
+sub _have_XML_Simple
+{
+    if (not defined $have_XML_Simple) {
+        # test whether XML::Simple is installed
+        if (eval { require XML::Simple; 1 }) {
+            $have_XML_Simple = 1;
+        } else {
+            $have_XML_Simple = 0;
+        }
+    }
+    return $have_XML_Simple;
+}
+
+
 =head1 NAME
 
 Yahoo::Search::Request -- Container object for a Yahoo! Search request.
@@ -218,6 +234,11 @@ sub Fetch
     ##
     my $xml = $response->content;
     print $xml, "\n" if $Request->{Debug} =~ m/xml/x;
+    if ($Request->{Debug} =~ m/XMLtmp/) {
+        open XMLTMP, ">/tmp/XML";
+        print XMLTMP $xml;
+        close XMLTMP;
+    }
 
     ##
     ## Even if the response is not successful, it may still be XML and may
@@ -241,20 +262,64 @@ sub Fetch
     }
 
     ##
-    ## Turn the XML into a Perl hash...
+    ## Turn the XML into a Perl hash.
     ##
+    ## If we're told to use XML::Simple, we'll do so directly.
+    ## Otherwise, we'll try our own mini (==fast) Yahoo::Search::XML. If it
+    ## can't grok the XML, we'll revert to XML::Simple, asking the user to
+    ## file a bug report....
+    ##
+    ## The following is more verbose than need be, but the more succinct
+    ## code is convoluted for little gain.
+    ## 
     my $ResultHash;
-    if ($Yahoo::Search::UseXmlSimple) {
-        require XML::Simple;
+    if ($Yahoo::Search::UseXmlSimple)
+    {
+        if (not _have_XML_Simple()) {
+            $@ = "\$Yahoo::Search::UseXmlSimple is true, but XML::Simple is not installed";
+            return ();
+        }
+
         $ResultHash = eval { XML::Simple::XMLin($xml) };
-    } else {
+        if (not $ResultHash) {
+            $@ = "Yahoo::Request: Error processing XML by XML::Simple: $@";
+            return ();
+        }
+    }
+    else
+    {
+        ## first try my mini parser
         $ResultHash = eval { Yahoo::Search::XML::Parse($xml) };
+
+        if (not $ResultHash)
+        {
+            my $orig_error = $@;
+
+            ##
+            ## Give XML::Simple a chance, if it's there
+            ##
+            if (not _have_XML_Simple())
+            {
+                warn "Yahoo::Search::XML is having trouble with the XML returned from Yahoo; try installing XML::Simple and setting \$Yahoo::Search::UseXmlSimple to true, and filing a bug report with jfriedl\@yahoo.com.\n";
+                $@ = "Yahoo::Request: Error processing XML: $orig_error";
+                return ();
+            }
+
+            $ResultHash = eval { XML::Simple::XMLin($xml) };
+
+            if (not $ResultHash) {
+                $@ = "Yahoo::Request: Error processing XML (even tried XML::Simple): $orig_error";
+                return ();
+            }
+            ##
+            ## XML::Simple could parse it, but Yahoo::Search::XML couldn't,
+            ## so it must be a bug with the former... )_:
+            ##
+            $Yahoo::Search::UseXmlSimple = 1;
+            warn "Yahoo::Search::XML is having trouble with the XML returned from Yahoo, so reverting to XML::Simple; suggest setting \$Yahoo::Search::UseXmlSimple to true and filing a bug report with jfriedl\@yahoo.com.\n";
+        }
     }
 
-    if (not $ResultHash) {
-        $@ = "error processing xml: $@";
-        return ();
-    }
 
     ##
     ## If there is only one result, $ResultHash->{Result} will be a hash

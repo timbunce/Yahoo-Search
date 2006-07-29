@@ -14,8 +14,8 @@ use Yahoo::Search::Request;
 ##   http://search.cpan.org/search?mode=module&n=1&query=Yahoo::Search
 ##
 
-our $VERSION = '1.5.8'; # Last num increases monotonically across all versions.
-                        # See the "Changes" filee (comes with the CPAN package)
+our $VERSION = '1.6.9'; # Last num increases monotonically across all versions.
+                        # See the "Changes" file (comes with the CPAN package)
                         # for version history.
 
 
@@ -2139,19 +2139,26 @@ Yahoo! servers.
 =item C<$Yahoo::Search::UseXmlSimple>
 
 If you set this to a true value, the XML returned by Yahoo! will be parsed
-with B<XML::Simple> rather than with the simple XML parser included as part
-of this package (Yahoo::Search::XML). XML::Simple uses XML::Parser under
-the hood, and at least on the systems I've tested it, XML::Parser suffers
-from a crippling memory leak that makes it very undesirable.
+with B<XML::Simple> (if installed on your system) rather than with
+Yahoo::Search::XML, a simple XML parser included as part of this package.
+XML::Simple uses XML::Parser under the hood, and at least on the systems
+I've tested it, XML::Parser suffers from a crippling memory leak that makes
+it very undesirable.
 
 However, if Yahoo! changes the XML they return in a way that my simple
-parser can't handle, you can install XML::Simple and set
-C<$Yahoo::Search::UseXmlSimple> and at least have things work (until you
-run out of memory).
+parser can't handle, it tries parsing it with XML::Simple. If XML::Simple
+is installed and can parse the XML, C<$Yahoo::Search::UseXmlSimple> is
+automatically set to true and a warning generated suggesting that a bug
+report be filed for Yahoo::Search::XML.
+
+If you encounter a situation where Yahoo::Search::XML can't grok Yahoo!'s
+XML, please submit a bug report. In the mean time, you can ensure that
+XML::Simple is installed, set C<$Yahoo::Search::UseXmlSimple>, and at least
+have things work until you run out of memory.
 
 The default value of C<$Yahoo::Search::UseXmlSimple> is taken from the
 environment variable C<YAHOO_SEARCH_XMLSIMPLE> if present, and otherwise
-defaults to false
+defaults to false.
 
 =item C<$Yahoo::Search::Version>
 
