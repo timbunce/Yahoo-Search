@@ -14,10 +14,9 @@ use Yahoo::Search::Request;
 ##   http://search.cpan.org/search?mode=module&n=1&query=Yahoo::Search
 ##
 
-our $VERSION = '1.7.10'; # Last num increases monotonically across all versions.
+our $VERSION = '1.6.9'; # Last num increases monotonically across all versions.
                         # See the "Changes" file (comes with the CPAN package)
                         # for version history.
-
 
 ##
 ## CLASS OVERVIEW
