@@ -7,6 +7,8 @@ use LWP::UserAgent;
 use HTTP::Request;
 use URI;
 
+our $VERSION = "20070320.002"; # just to make CPAN happy
+
 
 my $have_XML_Simple; # undef means 'not yet tested'
 sub _have_XML_Simple

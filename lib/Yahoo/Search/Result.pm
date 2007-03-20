@@ -1,6 +1,8 @@
 package Yahoo::Search::Result;
 use strict;
 
+our $VERSION = "20070320.002"; # just to make CPAN happy
+
 =head1 NAME
 
 Yahoo::Search::Result -- class representing a single result (single web

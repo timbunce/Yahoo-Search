@@ -1,4 +1,7 @@
-1.9.12 Mar 19, 2007      jfriedl@yahoo.com
+1.10.13 Mar 20, 2007      jfriedl@yahoo.com
+ Had to add some fake VERSION lines to the non-main pm files to satisfy CPAN.
+
+1.9.12 Mar 20, 2007      jfriedl@yahoo.com
  Fixed AppId check to allow for new, longer AppIds. Mike Kabanoid actually reported
  this to me two months ago, and I lamely forgot about it until now. Sorry!
 

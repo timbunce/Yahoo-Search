@@ -2,6 +2,8 @@ package Yahoo::Search::Response;
 use strict;
 use Yahoo::Search::Result;
 
+our $VERSION = "20070320.002"; # just to make CPAN happy
+
 =head1 NAME
 
 Yahoo::Search::Response -- Container object for the result set of one query
