@@ -7,16 +7,17 @@ use Yahoo::Search::Request;
 ## This is the interface to Yahoo!'s web search API.
 ## Written by Jeffrey Friedl <jfriedl@yahoo.com>
 ##
-## Copyright 2005 Yahoo! Inc.
+## Copyright 2007 Yahoo! Inc.
 ##
 ## Master source:
 ##
 ##   http://search.cpan.org/search?mode=module&n=1&query=Yahoo::Search
 ##
 
-our $VERSION = '1.6.9'; # Last num increases monotonically across all versions.
-                        # See the "Changes" file (comes with the CPAN package)
-                        # for version history.
+our $VERSION = '1.9.12'; # Last num increases monotonically across all versions.
+                         # See the "Changes" file (comes with the CPAN package)
+                         # for version history.
+
 
 ##
 ## CLASS OVERVIEW
@@ -45,8 +46,8 @@ my %Config =
   #
   Doc =>
   {
-   Url        => 'http://api.search.yahoo.com/WebSearchService/V1/webSearch',
-   ContextUrl => 'http://api.search.yahoo.com/WebSearchService/V1/contextSearch',
+   Url        => 'http://search.yahooapis.com/WebSearchService/V1/webSearch',
+   ContextUrl => 'http://search.yahooapis.com/WebSearchService/V1/contextSearch',
 
    MaxCount => 50,
 
@@ -100,7 +101,7 @@ my %Config =
   #
   Image =>
   {
-   Url => 'http://api.search.yahoo.com/ImageSearchService/V1/imageSearch',
+   Url => 'http://search.yahooapis.com/ImageSearchService/V1/imageSearch',
    MaxCount => 50,
 
    Defaults => {
@@ -141,7 +142,7 @@ my %Config =
   #
   Video =>
   {
-   Url => 'http://api.search.yahoo.com/VideoSearchService/V1/videoSearch',
+   Url => 'http://search.yahooapis.com/VideoSearchService/V1/videoSearch',
 
    MaxCount => 50,
 
@@ -178,7 +179,7 @@ my %Config =
   #
   Local =>
   {
-   Url => 'http://api.local.yahoo.com/LocalSearchService/V1/localSearch',
+   Url => 'http://local.yahooapis.com/LocalSearchService/V1/localSearch',
 
    MaxCount => 20,
 
@@ -211,7 +212,7 @@ my %Config =
   #
   News =>
   {
-   Url => 'http://api.search.yahoo.com/NewsSearchService/V1/newsSearch',
+   Url => 'http://search.yahooapis.com/NewsSearchService/V1/newsSearch',
 
    MaxCount => 50,
 
@@ -238,7 +239,7 @@ my %Config =
 
   Terms =>
   {
-   Url => 'http://api.search.yahoo.com/ContentAnalysisService/V1/termExtraction',
+   Url => 'http://search.yahooapis.com/ContentAnalysisService/V1/termExtraction',
 
    Defaults => {
                 Context => undef,
@@ -251,12 +252,12 @@ my %Config =
 
   Spell =>
   {
-   Url => 'http://api.search.yahoo.com/WebSearchService/V1/spellingSuggestion',
+   Url => 'http://search.yahooapis.com/WebSearchService/V1/spellingSuggestion',
   },
 
   Related =>
   {
-   Url => 'http://api.search.yahoo.com/WebSearchService/V1/relatedSuggestion',
+   Url => 'http://search.yahooapis.com/WebSearchService/V1/relatedSuggestion',
    Defaults => {
                 Count => 10,
                },
@@ -517,11 +518,11 @@ my $allow_appid = sub
     my $space = shift; #unused
 
     if (not @_) {
-        return "something which matches /^[- A-Za-z0-9_()[\\]*+=,.:\@\\\\]{8,40}\$/";
+        return "something which matches /^[- A-Za-z0-9_()[\\]*+=,.:\@\\\\]{8,}\$/";
     }
 
     my $val = shift;
-    if ($val =~ m/^[- A-Za-z0-9_()\[\]*+=,.:\@\\]{8,40}$/) {
+    if ($val =~ m/^[- A-Za-z0-9_()\[\]*+=,.:\@\\]{8,}$/) {
         return (1, $val);
     } else {
         return (0);
@@ -2180,13 +2181,10 @@ perldoc for LWP for more.
 
 =head1 Copyright
 
-
-Copyright (C) 2005 Yahoo! Inc.
+Copyright 2007 Yahoo! Inc.
 
 =head1 Author
 
 Jeffrey Friedl (jfriedl@yahoo.com)
-
-$Id: Search.pm 2 2005-01-28 04:27:46Z jfriedl $
 
 =cut

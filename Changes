@@ -1,3 +1,17 @@
+1.9.12 Mar 19, 2007      jfriedl@yahoo.com
+ Fixed AppId check to allow for new, longer AppIds. Mike Kabanoid actually reported
+ this to me two months ago, and I lamely forgot about it until now. Sorry!
+
+1.8.11 Feb 23, 2007      jfriedl@yahoo.com
+-------------------------------------------  
+  Changes per Yahoo for new API servers:
+     search.yahooapis.com
+     local.yahooapis.com
+
+1.7.10 July 29, 2006     jfriedl@yahoo.com
+-------------------------------------------  
+  Oops, had left in a spurious debugging message. Removed.
+
 1.6.9  July 29, 2006     jfriedl@yahoo.com
 -------------------------------------------  
   Yahoo! yet again changed their XML in a way incompatible with

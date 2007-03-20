@@ -686,13 +686,11 @@ sub SpellResponse
 
 =head1 Copyright
 
-Copyright (C) Yahoo! Inc
+Copyright Yahoo! Inc
 
 =head1 Author
 
-Copyright (C) 2005 Yahoo! Inc.
-
-$Id: Response.pm 3 2005-01-28 04:29:54Z jfriedl $
+Jeffrey Friedl (jfriedl@yahoo.com)
 
 =cut
 

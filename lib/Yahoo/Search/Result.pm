@@ -1553,16 +1553,12 @@ sub TermAsHtml
 
 =head1 Copyright
 
-Copyright (C) 2005 Yahoo! Inc.
+Copyright 2007 Yahoo! Inc.
 
 =head1 Author
 
 Jeffrey Friedl (jfriedl@yahoo.com)
 
-$Id: Result.pm 3 2005-01-28 04:29:54Z jfriedl $
-
-
 =cut
-
 
 1;
