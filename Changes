@@ -4,6 +4,10 @@ Changes - List of significant changes to Yahoo::Search
 
 =head2 Changes in 1.11.1
 
+    Fixed to return UTF-8 strings when using the default internal
+        Yahoo::Search::XML parser, like it does when using the XML::Simple
+        parser.  Added tests for same. RT#45029 RT#35213 RT#31618
+
     Added support for Region parameter thanks to Hendrik Weimer.
         RT#54591
 

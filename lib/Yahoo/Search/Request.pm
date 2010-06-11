@@ -302,7 +302,7 @@ sub Fetch
             ##
             if (not _have_XML_Simple())
             {
-                warn "Yahoo::Search::XML is having trouble with the XML returned from Yahoo; try installing XML::Simple and setting \$Yahoo::Search::UseXmlSimple to true, and filing a bug report with jfriedl\@yahoo.com.\n";
+                warn "Yahoo::Search::XML is having trouble with the XML returned from Yahoo ($orig_error); try installing XML::Simple and setting \$Yahoo::Search::UseXmlSimple to true, and filing a bug report.\n";
                 $@ = "Yahoo::Request: Error processing XML: $orig_error";
                 return ();
             }
@@ -310,7 +310,7 @@ sub Fetch
             $ResultHash = eval { XML::Simple::XMLin($xml) };
 
             if (not $ResultHash) {
-                $@ = "Yahoo::Request: Error processing XML (even tried XML::Simple): $orig_error";
+                $@ .= "Yahoo::Request: Error processing XML (even tried XML::Simple): $orig_error";
                 return ();
             }
             ##
@@ -318,7 +318,7 @@ sub Fetch
             ## so it must be a bug with the former... )_:
             ##
             $Yahoo::Search::UseXmlSimple = 1;
-            warn "Yahoo::Search::XML is having trouble with the XML returned from Yahoo, so reverting to XML::Simple; suggest setting \$Yahoo::Search::UseXmlSimple to true and filing a bug report with jfriedl\@yahoo.com.\n";
+            warn "Yahoo::Search::XML is having trouble with the XML returned from Yahoo ($orig_error), so reverting to XML::Simple; suggest setting \$Yahoo::Search::UseXmlSimple to true and filing a bug report.\n";
         }
     }
 

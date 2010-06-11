@@ -1,7 +1,10 @@
 package Yahoo::Search::XML;
 use strict;
+use Encode;
 
 our $VERSION = "20060729.004";
+
+my %enc_cache;
 
 ##
 ## Version history:
@@ -169,8 +172,18 @@ sub Parse($)
 
     @stack = {};
 
-    ## skip past the leading <?xml> tag
-    $xml =~ m/\A <\?xml.*?> /xgcs;
+    ## skip past the leading <?xml version="1.0" encoding="UTF-8"?> tag
+    if ($xml =~ m/\A <\?xml(.*?)> /xgcs) {
+        my $xml_header = $1;
+        if ($xml_header =~ /encoding="(.*?)"/) {
+            my $enc = $enc_cache{$1} = find_encoding($1);
+            # decode the bytes into a perl utf8 string
+            # taking care to preserve the pos-ition.
+            my $pos = pos($xml);
+            $xml = $enc->decode($xml);
+            pos($xml) = $pos;
+        }
+    }
 
     while (pos($xml) < length($xml))
     {
