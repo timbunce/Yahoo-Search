@@ -152,8 +152,10 @@ sub _entity($)
     my $name = shift;
     if (my $val = $EntityDecode{$name}) {
         return $val;
-    } elsif ($val =~ m/^#(\d+)$/) {
+    } elsif ($name =~ m/^#(\d+)$/) {
         return chr($1);
+    } elsif ($name =~ m/^#x([0-9a-f]+)$/i) {
+        return chr(hex($1));
     } else {
         _error(__LINE__, "unknown entity &$name;");
     }

@@ -8,8 +8,9 @@ Changes - List of significant changes to Yahoo::Search
         Yahoo::Search::XML parser, like it does when using the XML::Simple
         parser.  Added tests for same. RT#45029 RT#35213 RT#31618
 
-    Added support for Region parameter thanks to Hendrik Weimer.
-        RT#54591
+    Fixed entity parsing thanks to Bernt Budde. RT#32011
+
+    Added Region parameter thanks to Hendrik Weimer. RT#54591
 
     Converted to use Dist::Zilla for releases.
 
