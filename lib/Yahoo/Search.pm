@@ -953,10 +953,10 @@ sub Request
 
     ##
     ## Ensure that the Count, if given, is not over max
-    ##
-    if (defined $Param{count} and $Param{count} > $Config{$SearchSpace}->{MaxCount}) {
-        return _carp_on_error("maximum allowed Count for a $SearchSpace search is $Config{$SearchSpace}->{MaxCount}");
-    }
+    ## No longer enforced here. MaxCount is only advisory now.
+    #if (defined $Param{count} and $Param{count} > $Config{$SearchSpace}->{MaxCount}) {
+    #    return _carp_on_error("maximum allowed Count for a $SearchSpace search is $Config{$SearchSpace}->{MaxCount}");
+    #}
 
     ##
     ## If License is given, it an have multiple values (space, comma, or
@@ -1349,8 +1349,8 @@ returned.
 =item Count
 
 Indicates how many items should be returned. The default is 10. The maximum
-allowed depends on the search space being queried: B<20> for I<Local>
-searches, and B<50> for others which support the C<Count> argument.
+allowed depends on the search space being queried. The maximum isn't
+enforced by this module.
 
 Note that
 
@@ -1360,7 +1360,8 @@ and
 
   $SearchEngine->MaxCount($SearchSpace)
 
-return the maximum count allowed for the given C<$SearchSpace>.
+return the assumed maximum count allowed for the given C<$SearchSpace>.
+These counts may be out of date.
 
 =item Context
 
@@ -2064,7 +2065,8 @@ pair (which is required) is required to appear first.
 
 =item $num = Yahoo::Search->MaxCount($space)
 
-Returns the maximum allowed C<Count> query-argument for the given search space.
+Returns the assumed maximum allowed C<Count> query-argument for the given search space.
+The amount may be out of date.
 
 
 

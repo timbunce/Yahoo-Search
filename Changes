@@ -12,6 +12,9 @@ Changes - List of significant changes to Yahoo::Search
 
     Added Region parameter thanks to Hendrik Weimer. RT#54591
 
+    Changed MaxCount to simply be advisory, so searches requesting more
+      results aren't aborted by the module.
+
     Converted to use Dist::Zilla for releases.
 
 =head2 Earlier Changes
