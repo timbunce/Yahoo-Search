@@ -17,6 +17,9 @@ Changes - List of significant changes to Yahoo::Search
 
     Converted to use Dist::Zilla for releases.
 
+    Added a note to the docs recording the fact that Jeffrey Friedl
+        has placed the 1.10.13 code into the public domain (CC0).
+
 =head2 Earlier Changes
 
     1.10.13 Mar 20, 2007      jfriedl@yahoo.com

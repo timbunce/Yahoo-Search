@@ -686,10 +686,6 @@ sub SpellResponse
 
 =back
 
-=head1 Copyright
-
-Copyright Yahoo! Inc
-
 =head1 Author
 
 Jeffrey Friedl (jfriedl@yahoo.com)

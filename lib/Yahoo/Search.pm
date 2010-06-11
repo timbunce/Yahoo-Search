@@ -7,8 +7,6 @@ use Yahoo::Search::Request;
 ## This is the interface to Yahoo!'s web search API.
 ## Written by Jeffrey Friedl <jfriedl@yahoo.com>
 ##
-## Copyright 2007 Yahoo! Inc.
-##
 ## Master source:
 ##
 ##   http://search.cpan.org/search?mode=module&n=1&query=Yahoo::Search
@@ -2218,12 +2216,16 @@ Yahoo::Search uses LWP to communicate with Yahoo!'s servers; LWP uses
 environment variables such as C<http_proxy> and C<no_proxy>. See the
 perldoc for LWP for more.
 
-=head1 Copyright
-
-Copyright 2007 Yahoo! Inc.
-
 =head1 Author
 
 Jeffrey Friedl (jfriedl@yahoo.com)
+
+Jeffrey placed the 1.10.13 code in the public domain (or, technically, the
+http://creativecommons.org/publicdomain/zero/1.0/ licence) on June 11th 2010.
+Tim Bunce (Tim.Bunce@pobox.com) currently maintains the code, though with very
+little spare much time. He's very happy for someone else to help out.
+
+Please use https://rt.cpan.org/Dist/Display.html?Queue=Yahoo-Search to
+submit bug reports.
 
 =cut
