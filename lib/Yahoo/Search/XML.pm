@@ -2,7 +2,7 @@ package Yahoo::Search::XML;
 use strict;
 use Encode;
 
-our $VERSION = "20060729.004";
+our $VERSION = "20100611.004";
 
 my %enc_cache;
 
