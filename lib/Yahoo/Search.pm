@@ -1311,7 +1311,7 @@ Here are details of each:
 
 =item AppId
 
-A 8-40 character string which identifies the application making use of the
+A character string which identifies the application making use of the
 Yahoo! Search API. (Think of it along the lines of an HTTP User-Agent
 string.)
 
