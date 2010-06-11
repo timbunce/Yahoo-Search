@@ -59,6 +59,7 @@ my %Config =
                 Language     => undef,
                 Country      => undef,
                 License      => undef,
+                Region       => undef,
                },
 
    QueryOptional => 1,
@@ -622,6 +623,7 @@ my %ValidateRoutine =
  PostalCode   => $allow_postal_code,
  Language     => $allow_language_code,
  Country      => $allow_country_code,
+ Region       => $allow_country_code,
 
  Mode      => sub { $allow_from_hash->(0, $Config{$_[0]}->{AllowedMode}, @_) },
  Sort      => sub { $allow_from_hash->(0, $Config{$_[0]}->{AllowedSort}, @_) },
@@ -772,6 +774,7 @@ my %ArgToParam =
  Mode         => 'type',
  PostalCode   => 'zip',
  Radius       => 'radius',
+ Region       => 'region',
  Sort         => 'sort',
  Start        => 'start',
  State        => 'state',
@@ -1285,6 +1288,7 @@ showing which apply to queries of which search space:
   AllowAdult      [X]    [X]    [X]     .      .      .      .      .
   Type            [X]    [X]    [X]     .      .      .      .      .
   Language        [X]     .      .     [X]     .      .      .      .
+  Region          [X]     .      .      .      .      .      .      .
   Sort             .      .      .     [X]    [X]     .      .      .
   Color            .     [X]     .      .      .      .      .      .
       .
@@ -1429,6 +1433,44 @@ this Perl API does not attempt to restrict the C<Country> value to members
 of this specific list. If you provide a C<Country> value which is not
 supported by Yahoo!'s web services, a "400 Bad Request" error is returned
 in C<@$>.
+
+=item Region
+
+Uses a different regional version of the Yahoo! web service. For
+example, setting C<Region> to "de" will show the results as returned
+from de.search.yahoo.com. Note that this does not restrict the results
+in the way C<Country> and C<Language> do, but will merely lead to a
+different weighting of the results. As of this writing, the Yahoo! web
+services support the following codes for C<Region>:
+
+ code   country
+ ----   ---------------
+  ar    Argentina
+  au    Australia
+  at    Austria
+  br    Brazil
+  ca    Canada
+  ct    Catalan
+  dk    Denmark
+  fi    Finland
+  fr    France
+  de    Germany
+  in    India
+  id    Indonesia
+  it    Italy
+  my    Malaysia
+  mx    Mexico
+  nl    Netherlands
+  no    Norway
+  ph    Phillipines
+  ru    Russian Federation
+  sg    Singapore
+  es    Spain
+  se    Sweden
+  ch    Switzerland
+  th    Thailand
+  uk    United Kingdom
+  us    United States (yahoo.com)
 
 =item License
 

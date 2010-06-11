@@ -4,6 +4,9 @@ Changes - List of significant changes to Yahoo::Search
 
 =head2 Changes in 1.11.1
 
+    Added support for Region parameter thanks to Hendrik Weimer.
+        RT#54591
+
     Converted to use Dist::Zilla for releases.
 
 =head2 Earlier Changes
