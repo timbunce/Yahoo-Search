@@ -5,6 +5,7 @@ Changes - List of significant changes to Yahoo::Search
 =head2 Changes in 1.11.3
 
     Depend on LWP version instead of individual module versions.
+    Bump sub-module versions to make them shorter to avoid float issues.
 
 =head2 Changes in 1.11.2
 
