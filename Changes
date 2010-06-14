@@ -2,6 +2,10 @@
 
 Changes - List of significant changes to Yahoo::Search
 
+=head2 Changes in 1.11.3
+
+    Depend on LWP version instead of individual module versions.
+
 =head2 Changes in 1.11.2
 
     Default XML to UTF-8 encoding if an explicit encoding isn't given.
