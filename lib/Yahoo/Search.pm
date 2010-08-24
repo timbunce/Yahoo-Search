@@ -1364,9 +1364,7 @@ These counts may be out of date.
 =item Context
 
 By providing a context string to a B<Doc> query, you change the request
-from a normal document query to a Y!Q contextual query. Y!Q is described at
-
-   http://yq.search.yahoo.com/
+from a normal document query to a Y!Q contextual query.
 
 The C<Content> string can be raw text, html, etc., and is to provide the
 document search more information about what kind of results are wanted.
