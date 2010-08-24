@@ -2,6 +2,10 @@
 
 Changes - List of significant changes to Yahoo::Search
 
+=head2 Changes in 1.11.4
+
+    Removed reference to http://yq.search.yahoo.com/
+
 =head2 Changes in 1.11.3
 
     Depend on LWP version instead of individual module versions.
